@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local LLM</title>
+</head>
+<body>
+    <form method="post" action="/gen">
+        <input type="text" name="prompt" id="prompt">
+        <button type="submit">Submit</button>
+    </form>
+    <% if (locals.result) { %>
+        <p><%= result %></p>
+    <% } else { %>
+        <p>No response yet</p>
+    <% } %>
+</body>
+</html>
