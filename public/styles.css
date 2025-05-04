@@ -1,254 +1,144 @@
 :root {
-	--background: #4a4e69;
-	--text: #f4f3ee;
-	--inputBackground: #9a8c98;
-	--inputText: #f4f3ee;
+	--bg: #28112B;
+	--darkpurple: #150513;
+	--green: #5F6354;
+	--darkgreen: #4A503B;
+	--text: #F4F1DE
 }
 
 * {
 	padding: 0;
 	margin: 0;
-	font-family: "Outfit", sans-serif;
+	color: var(--text);
+	overflow: hidden;
+	-webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.material-symbols-outlined {
+  font-variation-settings:
+  'FILL' 1,
+  'wght' 400,
+  'GRAD' 0,
+  'opsz' 24
 }
 
 body {
-	background-color: var(--background);
-	height: 100vh;
+	background-color: var(--bg);
 }
 
-.topBar {
-	width: 100%;
-	height: 3rem;
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-	align-content: center;
-}
-
-.switch {
-	position: relative;
-	top: 1rem;
-	left: 1rem;
-	display: inline-block;
-	width: 5vw;
-	height: 4vh;
-	z-index: 0;
-}
-
-/* Hide default HTML checkbox */
-.switch input {
-	opacity: 0;
-	width: 0;
-	height: 0;
-}
-
-/* The slider */
-.slider {
-	position: absolute;
-	cursor: pointer;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	background-color: var(--inputBackground);
-	transition: .4s;
-}
-
-.slider:before {
-	position: absolute;
-	content: "";
-	height: 2.75vh;
-	width: 2.75vh;
-	left: 4px;
-	bottom: 0.65vh;
-	background-color: var(--inputText);
-	transition: .4s;
-}
-
-input:checked + .slider:before {
-	transform: translateX(2.9vw);
-}
-
-/* Rounded sliders */
-.slider.round {
-	border-radius: 34px;
-}
-
-.slider.round:before {
-	border-radius: 50%;
-}
-
-/* Icon styling */
-.switchIcon {
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	font-size: 18px;
-	color: var(--background);
-	opacity: 0.5;
-	transition: .4s;
-	-webkit-touch-callout: none;
-	-webkit-user-select: none;
-	/* biome-ignore lint/correctness/noUnknownProperty: <explanation> */
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-}
-
-.switchIcon.left {
-	left: 8px;
-}
-
-.switchIcon.right {
-	right: 8px;
-}
-
-input:not(:checked) + .slider .switchIcon.left {
-	color: var(--background);
-	opacity: 1;
-}
-
-input:checked + .slider .switchIcon.right {
-	color: var(--background);
-	opacity: 1;
-}
-
-#theme {
-	color: var(--text);
-	position: absolute;
-	right: 1rem;
-	top: 1rem;
-	font-size: 2.5rem;
-	animation: spin 0.5s linear;
-}
-
-#theme:hover {
-	cursor: pointer;
-}
-
-#chatArea {
-	width: 75%;
-	height: 80%;
-	position: absolute;
-	left: 51%;
-	transform: translateX(-50%);
-	top: 5%;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	overflow: scroll;
-}
-
-.message {
-	width: 50%;
-	color: var(--text);
-	font-size: 1.2vw;
-	padding-left: 15vw;
-	margin-bottom: 2vh;
-	display: flex;
-	flex-direction: row;
-	align-items: flex-start;
-	white-space: pre-wrap; /* Preserves whitespace and wraps long lines */
-}
-
-.message:nth-child(2n) {
-	align-self: flex-start;
-}
-
-.message .icon {
-	margin: 0 2vw;
-	border: 2px solid;
-	border-radius: 50%;
-	padding: 0.75vh;
-	width: 2vh;
-	height: 2vh;
-	font-size: 1.5vw;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	-webkit-touch-callout: none;
-	-webkit-user-select: none;
-	/* biome-ignore lint/correctness/noUnknownProperty: <explanation> */
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-}
-
-#input {
-	width: 75%;
-	position: absolute;
-	left: 50%;
-	top: 90%;
-	transform: translateX(-50%);
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
-}
-
-#input input {
-	width: 40vw;
-	position: relative;
-	left: 50%;
-	height: 3vh;
-	transform: translateX(-50%);
-	color: var(--inputText);
-	font-size: 1.6vh;
-	font-optical-sizing: auto;
-	font-weight: 400;
+.title {
+	font-family: "Crimson Text", serif;
+	font-weight: 600;
 	font-style: normal;
-	padding: 1vh;
-	padding-left: 1.5vw;
-	border-radius: 50px;
-	border: none;
-	background-color: var(--inputBackground);
 }
 
-#formContainer {
+.body {
+	font-family: "Inter", sans-serif;
+	font-optical-sizing: auto;
+	font-weight: 300;
+	font-style: normal;
+	overflow-x: hidden;
+}
+
+#hero {
+	width: 100%;
+	height: 100vh;
+	display: flex;
+	align-items: center;
+	padding-left: 15%;
+}
+
+#header .title{
+	font-size: 65pt;
+}
+
+#header .body{
+	font-size: 20pt;
+}
+
+#new-project-btn {
 	display: flex;
 	flex-direction: row;
-}
-
-#formContainer button {
-	color: var(--inputText);
-	position: relative;
-	left: -1.5vw;
-	border-radius: 50px;
-	width: 3vw;
-	background: none;
-	border: none;
-	opacity: 0.5;
-}
-
-#formContainer button:hover {
+	justify-content: center;
+	align-items: center;
+	gap: 0.5rem;
+	background: var(--darkpurple);
+	padding: 0.5rem 1rem;
+	border-radius: 1.5rem;
+	font-family: "Inter", sans-serif;
+	font-size: 1.25rem;
+	font-weight: 300;
 	cursor: pointer;
-	opacity: 1;
+	border: none;
+	margin-top: 5vh;
+	width: 14%;
 }
 
-#input input::placeholder {
-	color: var(--inputText);
+#new-project-btn .material-symbols-outlined {
+	color: var(--bg);
+	font-size: 2rem;
 }
 
-#ingestForm {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  gap: 2vh;
+#projects {
+	width: 75vw;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 2rem;
+	margin-top: 2.5vh;
+	justify-content: flex-start;
+}
+  
+.projectCard {
+	position: relative;
+	flex: 0 0 calc(25% - 2rem);
+	aspect-ratio: 1;
+	background-color: var(--darkpurple);
+	border-radius: 2rem;
+	overflow: hidden;
+	padding: 1.5rem;
+	display: flex;
+	align-items: flex-end;
+	color: var(--text);
+	box-sizing: border-box;
 }
 
-@keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
-	50% {
-		transform: rotate(45deg);
-	}
-	100% {
-		transform: rotate(0deg);
-	}
+.projectCard:hover {
+	cursor: pointer;
 }
+  
+.projectCard:nth-child(2n) {
+	background-color: var(--green);
+}
+
+.projectCard:nth-child(2n) .material-symbols-outlined {
+	color: var(--darkgreen);
+}
+  
+.projectCard .material-symbols-outlined {
+	position: absolute;
+	top: 1.5rem;
+	left: 1.5rem;
+	font-size: 4rem;
+	color: var(--bg);
+}
+  
+.projectText h3 {
+	margin-bottom: 0.5rem;
+	font-family: "Crimson Text", serif;
+	font-weight: 600;
+	font-size: 3rem;
+	line-height: 1.2;
+}
+  
+.projectText p {
+	font-family: "Inter", sans-serif;
+	font-weight: 300;
+	font-size: 1rem;
+	line-height: 1.4;
+	white-space: normal;
+}
+  

@@ -1,7 +1,6 @@
 import axios from 'axios';
 import bodyParser from 'body-parser';
 import e from 'express';
-import { ChromaClient, OllamaEmbeddingFunction } from "chromadb";
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import fileUpload from 'express-fileupload';
@@ -18,25 +17,34 @@ app.use(fileUpload({
     createParentPath: true,
 }));
 
-const client = new ChromaClient({
-    path: "http://iceberg:8000",
-});
-
-const embedder = new OllamaEmbeddingFunction({
-    url: "http://iceberg:11434/api/embeddings",
-    model: "mxbai-embed-large",
-});
-
-const collection = await client.getOrCreateCollection({
-    name: 'documents10',
-    embeddingFunction: embedder,  // Embedding function is passed here
-});
-
-const ollamaURL = "http://iceberg:11434/api";
+const ollamaURL = "http://localhost:11434/api";
 const model = "llama3.2";
 
+const projects = [
+    {
+        icon: "favorite",
+        title: "Test",
+        desc: "A test project for the ejs."
+    },
+    {
+        icon: "book",
+        title: "School",
+        desc: "This is a longer description because this is for studying"
+    },
+    {
+        icon: "table_restaurant",
+        title: "Food",
+        desc: "Wow, super cool restaurants for food yum"
+    },
+    {
+        icon: "flight",
+        title: "Holidays Abroad",
+        desc: "This has a longer title!"
+    }
+]; // this will be fetched from a database eventually
+
 app.get("/", async (req, res) => {
-    res.render("index.ejs");
+    res.render("index.ejs", { projects: projects });
 });
 
 app.get("/ingest", async (req, res) => {
