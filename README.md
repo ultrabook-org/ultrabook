@@ -1,10 +1,8 @@
-## Local LLM 🤖
-A self hosted way of interacting with AI models with a built in RAG pipeline.
+## keep 🏰
+A self hosted alternative to notebookLM to accelerate learning/research with AI
 
 ### How it works:
-This app utilises an instance of [ChromaDB](https://docs.trychroma.com/) and [Ollama](https://ollama.com/) as a backend. The app is currently hardcoded to use llama3.2 and mxbai-embed-large models (to chat and embed docunents respectively) and all vectors are stored in the ChromaDB.
+Using [Ollama](https://ollama.com/) to act as a backend, you can upload documents or links to videos/websites which are then embedded and used as context for the model of your choice to chat with or create a 'podcast' to listen to the key points of the resources.
 
 ### TODO:
- - Allow users to change address of Ollama/ChromaDB
- - Allow users to change models used
- - Chat context (LangChain??)
+ - Add functionality
