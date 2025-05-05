@@ -1,37 +1,59 @@
-const r = document.querySelector(':root');
-let theme = "dark";
-const themeController = document.getElementById("theme");
-themeController.addEventListener("click", changeTheme);
+const form = document.getElementById("createProjectForm")
 
-function reset_animation(elementID) {
-    const el = document.getElementById(elementID);
-    el.style.animation = 'none';
-    el.offsetHeight; // Trigger reflow
-    el.style.animation = null;
+function createProject() {
+    form.style.display = "flex"
 }
 
-function changeTheme() {
-    if (theme === "dark") {
-        r.style.setProperty('--background', '#f4f3ee');
-        r.style.setProperty('--text', '#4a4e69');
-        reset_animation("theme");
-        themeController.innerHTML = "light_mode";
-        theme = "light";
-    } else {
-        r.style.setProperty('--background', '#4a4e69');
-        r.style.setProperty('--text', '#f4f3ee');
-        reset_animation("theme");
-        themeController.innerHTML = "dark_mode";
-        theme = "dark";
+function closeForm() {
+    form.style.display = "none"
+}
+
+// app.js (front-end)
+document.addEventListener('DOMContentLoaded', () => {
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file');
+    const label = dropzone.querySelector('label');
+    const origLabel = label.innerHTML;
+  
+    function updateLabelWithFiles(files) {
+      const fileArray = Array.from(files);
+      const count = fileArray.length;
+      const names = fileArray.map(f => f.name).join(', ');
+      label.innerHTML = `
+        <strong>${count} file${count > 1 ? 's' : ''}</strong>
+        <span class="box__dragndrop">${names}</span>
+      `;
     }
-}
-
-function switchMode() {
-    const toggle = document.getElementById("mode");
-    
-    if (toggle.checked) {
-        window.location.replace(`${window.location.origin}/ingest`)
-    } else {
-        window.location.replace(window.location.origin)
-    }
-}
+  
+    // Highlight on dragover
+    dropzone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+  
+    // Remove highlight on dragleave
+    // biome-ignore lint/complexity/noForEach: <explanation>
+    ['dragleave', 'dragend'].forEach(evt =>
+      dropzone.addEventListener(evt, () => dropzone.classList.remove('dragover'))
+    );
+  
+    // Handle drop
+    dropzone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        updateLabelWithFiles(e.dataTransfer.files);
+      }
+    });
+  
+    // Handle manual file selection
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) {
+        updateLabelWithFiles(fileInput.files);
+      } else {
+        label.innerHTML = origLabel;
+      }
+    });
+  });
+  

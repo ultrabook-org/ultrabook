@@ -13,6 +13,7 @@
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
     "chromadb-default-embed": "^2.13.2",
+    "dropzone": "^6.0.0-beta.2",
     "ejs": "^3.1.10",
     "express": "^4.21.0",
     "express-fileupload": "^1.5.1",

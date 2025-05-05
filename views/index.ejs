@@ -16,7 +16,25 @@
                 <h1 class="title">Welcome to keep</h1>
                 <% if (locals.projects.length > 0) { %>
                     <h2 class="body">Create a new project or select one below</h2>
-                    <button id="new-project-btn"><span class="material-symbols-outlined">add</span> New Project</button>
+                    <button id="new-project-btn" onclick="createProject()"><span class="material-symbols-outlined">add</span> New Project</button>
+                    <div id="createProjectForm">
+                        <span class="close material-symbols-outlined" onclick="closeForm()">close</span>
+                        <form id="projectForm" action="/new-project" method="post" enctype="multipart/form-data">
+                        <div id="formInputs">
+                            <label for="title">Project Title:</label>
+                            <input type="text" name="title" id="title" placeholder="New Project">
+                            <label for="desc">Project Description:</label>
+                            <input type="text" name="desc" id="desc" placeholder="A super cool project">
+                        </div>
+                    
+                        <div id="dropzone" class="box__input">
+                            <input class="box__file" type="file" name="files" id="file" data-multiple-caption="{count} files selected" multiple />
+                            <label for="file"><strong>Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
+                        </div>
+                    
+                        <button type="submit">Create Project</button>
+                        </form>
+                    </div>
                     <div id="projects">
                         <% for( let i = 0; i < locals.projects.length; i++ ) { %>
                             <div class="projectCard">
@@ -30,10 +48,29 @@
                     </div>
                 <% } else { %>
                     <h2 class="body">Create a new project to begin</h2>
-                    <button id="new-project-btn"><span class="material-symbols-outlined">add</span> New Project</button>
+                    <button id="new-project-btn" onclick="createProject()"><span class="material-symbols-outlined">add</span> New Project</button>
+                    <div id="createProjectForm">
+                        <span class="close material-symbols-outlined" onclick="closeForm()">close</span>
+                        <form id="projectForm" action="/new-project" method="post" enctype="multipart/form-data">
+                        <div id="formInputs">
+                            <label for="title">Project Title:</label>
+                            <input type="text" name="title" id="title" placeholder="New Project">
+                            <label for="desc">Project Description:</label>
+                            <input type="text" name="desc" id="desc" placeholder="A super cool project">
+                        </div>
+                    
+                        <div id="dropzone" class="box__input">
+                            <input class="box__file" type="file" name="files" id="file" data-multiple-caption="{count} files selected" multiple />
+                            <label for="file"><strong>Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
+                        </div>
+                    
+                        <button type="submit">Create Project</button>
+                        </form>
+                    </div>
                     <div id="projects"></div>
                 <% } %>
             </div>
         </div>
+        <script src="app.js"></script>
     </body>
 </html>

@@ -2,7 +2,7 @@ import axios from 'axios';
 import bodyParser from 'body-parser';
 import e from 'express';
 import { fileURLToPath } from 'node:url';
-import { dirname } from 'node:path';
+import path, { dirname } from 'node:path';
 import fileUpload from 'express-fileupload';
 import fs from 'node:fs';
 
@@ -17,31 +17,15 @@ app.use(fileUpload({
     createParentPath: true,
 }));
 
+let filesDir = path.join(__dirname, 'files');
+if (!fs.existsSync(filesDir)) {
+  fs.mkdirSync(filesDir, { recursive: true });
+}
+
 const ollamaURL = "http://localhost:11434/api";
 const model = "llama3.2";
 
-const projects = [
-    {
-        icon: "favorite",
-        title: "Test",
-        desc: "A test project for the ejs."
-    },
-    {
-        icon: "book",
-        title: "School",
-        desc: "This is a longer description because this is for studying"
-    },
-    {
-        icon: "table_restaurant",
-        title: "Food",
-        desc: "Wow, super cool restaurants for food yum"
-    },
-    {
-        icon: "flight",
-        title: "Holidays Abroad",
-        desc: "This has a longer title!"
-    }
-]; // this will be fetched from a database eventually
+const projects = [];
 
 app.get("/", async (req, res) => {
     res.render("index.ejs", { projects: projects });
@@ -67,6 +51,34 @@ class Message {
 }
 
 const messages = [];
+
+app.post("/new-project", async (req, res) => {
+    const { title, desc } = req.body;
+
+    filesDir = path.join(__dirname, `files/${title}`);
+    if (!fs.existsSync(filesDir)) {
+        fs.mkdirSync(filesDir, { recursive: true });
+    }
+    const uploaded = req.files?.files;
+    const savedNames = [];
+    if (uploaded) {
+      const filesArray = Array.isArray(uploaded) ? uploaded : [uploaded];
+      for (const file of filesArray) {
+        const savePath = path.join(filesDir, file.name);
+        await file.mv(savePath);
+        savedNames.push(file.name);
+      }
+    }
+
+    projects.push({
+      icon: 'favorite',
+      title,
+      desc,
+      files: savedNames,
+    });
+  
+    res.render("index.ejs", { projects });
+  });
 
 app.post("/gen", async (req, res) => {
 	try {
