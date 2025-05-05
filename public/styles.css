@@ -67,6 +67,8 @@ button:focus {
 
 #header .body{
 	font-size: 20pt;
+	position: relative;
+	top: -5vh;
 }
 
 #new-project-btn {
@@ -83,7 +85,6 @@ button:focus {
 	font-weight: 300;
 	cursor: pointer;
 	border: none;
-	margin-top: 5vh;
 	width: 14%;
 	transition: 0.5s;
 }
