@@ -5,9 +5,14 @@ import { fileURLToPath } from 'node:url';
 import path, { dirname } from 'node:path';
 import fileUpload from 'express-fileupload';
 import fs from 'node:fs';
+import { getTextExtractor } from 'office-text-extractor'
+import PocketBase from 'pocketbase';
+import { register } from 'node:module';
 
 const app = e();
 const port = 3000;
+const extractor = getTextExtractor()
+const pb = new PocketBase('http://127.0.0.1:8090');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,7 +33,7 @@ const model = "llama3.2";
 const projects = [];
 
 app.get("/", async (req, res) => {
-    res.render("index.ejs", { projects: projects });
+    res.render("index.ejs", { register: true });
 });
 
 app.get("/ingest", async (req, res) => {
@@ -52,6 +57,31 @@ class Message {
 
 const messages = [];
 
+app.post("/auth-user", async (req, res) => {
+    const { email, password, confirmPassword, action } = req.body
+    if (action === "register") {
+        try {
+            await pb.collection("users").create({
+                email,
+                password,
+                passwordConfirm: confirmPassword
+            })
+            res.render("index.ejs", { register: false })
+        } catch (err) {
+            console.log(err)
+            res.render("index.ejs", { message: err.response.message })
+        }
+    } else {
+        try {
+            await pb.collection("users").authWithPassword(email, password)
+            res.render("home.ejs", { projects: projects })
+        } catch (err) {
+            console.log(err)
+            res.render("index.ejs", { message: err.response.message })
+        }
+    }
+})
+
 app.post("/new-project", async (req, res) => {
     const { title, desc } = req.body;
 
@@ -70,6 +100,13 @@ app.post("/new-project", async (req, res) => {
       }
     }
 
+    // Get text from files
+    // for (const file in savedNames) {
+    //     console.log(savedNames[file])
+    //     const text = await extractor.extractText({ input: `${filesDir}/${savedNames[file]}`, type: 'file' })
+    //     console.log(text)
+    // }
+
     projects.push({
       icon: 'favorite',
       title,
@@ -77,7 +114,7 @@ app.post("/new-project", async (req, res) => {
       files: savedNames,
     });
   
-    res.render("index.ejs", { projects });
+    res.render("home.ejs", { projects: projects });
   });
 
 app.post("/gen", async (req, res) => {
