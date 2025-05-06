@@ -8,6 +8,7 @@ import { getTextExtractor } from 'office-text-extractor';
 import fileUpload from 'express-fileupload';
 import PocketBase from 'pocketbase';
 import { readFile } from "node:fs/promises";
+import mime from 'mime-types';
 
 const app = e();
 const port = 3000;
@@ -22,7 +23,7 @@ app.use(fileUpload({
     createParentPath: true,
 }));
 
-let filesDir = path.join(__dirname, 'files');
+const filesDir = path.join(__dirname, 'files');
 if (!fs.existsSync(filesDir)) {
   fs.mkdirSync(filesDir, { recursive: true });
 }
@@ -84,33 +85,47 @@ app.post("/auth-user", async (req, res) => {
 
 app.post("/new-project", async (req, res) => {
     const { title, desc } = req.body;
-    filesDir = path.join(__dirname, `files/${pb.authStore.record.id}/${title}`);
-    if (!fs.existsSync(filesDir)) {
-        fs.mkdirSync(filesDir, { recursive: true });
-    }
-    const uploaded = req.files?.files;
-    const savedNames = [];
-    if (uploaded) {
-      const filesArray = Array.isArray(uploaded) ? uploaded : [uploaded];
-      for (const file of filesArray) {
-        const savePath = path.join(filesDir, file.name);
-        await file.mv(savePath);
-        savedNames.push(file.name);
-      }
-    }
-    
-    try {
-        const buf = await readFile(`${filesDir}/${savedNames[0]}`);
-        const projectRecord = await pb.collection('projects').create({
-            "owner": pb.authStore.record.id,
-            "title": title,
-            "desc": desc,
-            "sources": new File([buf], { type: "application/octet-stream" })
-        });
-    } catch (err) {
-        console.error('Error creating record:', err);
-        return res.status(500).send('Failed to create record.');
-    }
+  const ownerId = pb.authStore.record.id;
+  const filesDir = path.join(__dirname, `files/${ownerId}/${title}`);
+
+  // 1) Ensure directory exists
+  if (!fs.existsSync(filesDir)) {
+    fs.mkdirSync(filesDir, { recursive: true });
+  }
+
+  // 2) Save incoming uploads to disk
+  const uploaded = req.files?.files;
+  const filesArray = uploaded
+    ? (Array.isArray(uploaded) ? uploaded : [uploaded])
+    : [];
+  const savedNames = [];
+  for (const file of filesArray) {
+    const savePath = path.join(filesDir, file.name);
+    await file.mv(savePath);
+    savedNames.push(file.name);
+  }
+
+  try {
+    // 3) Build record data with File instances
+    const recordData = {
+      owner: ownerId,
+      title,
+      desc,
+      sources: savedNames.map(name => {
+        const fullPath = path.join(filesDir, name);
+        const buffer = fs.readFileSync(fullPath);    // read as Buffer :contentReference[oaicite:5]{index=5}
+        const contentType = mime.lookup(fullPath) || 'application/octet-stream';
+        return new File([buffer], name, { type: contentType });  // File is global in Node 18+ :contentReference[oaicite:6]{index=6}
+      }),
+    };
+
+    // 4) Create record (auto multipart)
+    const projectRecord = await pb.collection('projects').create(recordData);
+    console.log('Created:', projectRecord);
+  } catch (err) {
+    console.error('Error creating record:', err);
+    return res.status(500).send('Failed to create record.');
+  }
 
 
     // Get text from files
