@@ -58,6 +58,38 @@ class Message {
 
 const messages = [];
 
+app.get("/home", async (req, res) => {
+    try {
+        // 1. Ensure user is authenticated
+        const ownerId = pb.authStore.record?.id;
+        if (!ownerId) {
+          return res.redirect('/');
+        }
+    
+        // 2. Fetch all projects for this user
+        const records = await pb
+          .collection('projects')
+          .getFullList({
+            filter: `owner = "${ownerId}"`,
+            sort: '-created',
+          });
+    
+        // 3. Build local projects array
+        const projects = records.map(rec => ({
+          icon: 'favorite',
+          title: rec.title,
+          desc: rec.desc,
+          id: rec.id,
+        }));
+    
+        // 4. Render view with fetched projects
+        res.render('home.ejs', { projects: projects });
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        res.status(500).send('Could not load projects.');
+      }
+})
+
 app.post("/auth-user", async (req, res) => {
     const { email, password, confirmPassword, action } = req.body
     if (action === "register") {
@@ -75,7 +107,7 @@ app.post("/auth-user", async (req, res) => {
     } else {
         try {
             await pb.collection("users").authWithPassword(email, password)
-            res.render("home.ejs", { projects: projects })
+            res.redirect("/home")
         } catch (err) {
             console.log(err)
             res.render("index.ejs", { message: err.response.message })
@@ -84,7 +116,7 @@ app.post("/auth-user", async (req, res) => {
 })
 
 app.post("/new-project", async (req, res) => {
-    const { title, desc } = req.body;
+  const { title, desc } = req.body;
   const ownerId = pb.authStore.record.id;
   const filesDir = path.join(__dirname, `files/${ownerId}/${title}`);
 
@@ -122,6 +154,14 @@ app.post("/new-project", async (req, res) => {
     // 4) Create record (auto multipart)
     const projectRecord = await pb.collection('projects').create(recordData);
     console.log('Created:', projectRecord);
+    projects.push({
+        icon: 'favorite',
+        title,
+        desc,
+        files: savedNames,
+      });
+    
+    res.redirect("/home");
   } catch (err) {
     console.error('Error creating record:', err);
     return res.status(500).send('Failed to create record.');
@@ -134,15 +174,6 @@ app.post("/new-project", async (req, res) => {
     //     const text = await extractor.extractText({ input: ${filesDir}/${savedNames[file]}, type: 'file' })
     //     console.log(text)
     // }
-
-    projects.push({
-      icon: 'favorite',
-      title,
-      desc,
-      files: savedNames,
-    });
-  
-    res.render("home.ejs", { projects: projects });
   });
 
 app.post("/gen", async (req, res) => {
