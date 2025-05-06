@@ -13,6 +13,7 @@
 <body>
     <% if (locals.register === true) { %>
         <form action="/auth-user" method="post" id="login">
+            <h1>Create a new account (you'll need to login afterwards)</h1>
             <label for="email">Enter your email:</label>
             <input type="email" name="email" id="email" placeholder="hello@test.com">
     
@@ -21,25 +22,25 @@
     
             <label for="confirmPassword">Confirm your password:</label>
             <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password">
+
+            <p><%= locals.message %></p>
     
             <button type="submit" name="action" value="register">Create Account</button>
+            <hr>
+            <h2>Already have an account? <a href="/swap">Login</a></h2>
         </form>
-        <p><%= locals.message %></p>
     <% } else { %>
         <form action="/auth-user" method="post" id="login">
+            <h1>Login to your account</h1>
             <label for="email">Enter your email:</label>
             <input type="email" name="email" id="email" placeholder="hello@test.com">
     
             <label for="password">Enter your password:</label>
             <input type="password" name="password" id="password" placeholder="Password">
     
-            <label for="confirmPassword">Confirm your password:</label>
-            <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password">
-    
-            <div id="buttons">
-                <button type="submit" name="action" value="login">Login</button>
-                <button type="submit" name="action" value="register">Create Account</button>
-            </div>
+            <button type="submit" name="action" value="login">Login</button>
+            <hr>
+            <h2>Need to make a new account? <a href="/swap">Create account</a></h2>
         </form>
         <p><%= locals.message %></p>
     <% } %>

@@ -90,6 +90,18 @@ app.get("/home", async (req, res) => {
       }
 })
 
+let register = true
+
+app.get("/swap", async (req, res) => {
+  if (register) {
+    register = false
+    res.render("index.ejs", { register })
+  } else {
+    register = true
+    res.render("index.ejs", { register })
+  }
+})
+
 app.post("/auth-user", async (req, res) => {
     const { email, password, confirmPassword, action } = req.body
     if (action === "register") {
@@ -99,7 +111,8 @@ app.post("/auth-user", async (req, res) => {
                 password,
                 passwordConfirm: confirmPassword
             })
-            res.render("index.ejs", { register: false })
+            register = false
+            res.render("index.ejs", { register })
         } catch (err) {
             console.log(err)
             res.render("index.ejs", { message: err.response.message })
