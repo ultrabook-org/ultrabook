@@ -3,11 +3,11 @@ import bodyParser from 'body-parser';
 import e from 'express';
 import { fileURLToPath } from 'node:url';
 import path, { dirname } from 'node:path';
-import fileUpload from 'express-fileupload';
 import fs from 'node:fs';
-import { getTextExtractor } from 'office-text-extractor'
+import { getTextExtractor } from 'office-text-extractor';
+import fileUpload from 'express-fileupload';
 import PocketBase from 'pocketbase';
-import { register } from 'node:module';
+import { readFile } from "node:fs/promises";
 
 const app = e();
 const port = 3000;
@@ -84,8 +84,7 @@ app.post("/auth-user", async (req, res) => {
 
 app.post("/new-project", async (req, res) => {
     const { title, desc } = req.body;
-
-    filesDir = path.join(__dirname, `files/${title}`);
+    filesDir = path.join(__dirname, `files/${pb.authStore.record.id}/${title}`);
     if (!fs.existsSync(filesDir)) {
         fs.mkdirSync(filesDir, { recursive: true });
     }
@@ -99,11 +98,25 @@ app.post("/new-project", async (req, res) => {
         savedNames.push(file.name);
       }
     }
+    
+    try {
+        const buf = await readFile(`${filesDir}/${savedNames[0]}`);
+        const projectRecord = await pb.collection('projects').create({
+            "owner": pb.authStore.record.id,
+            "title": title,
+            "desc": desc,
+            "sources": new File([buf], { type: "application/octet-stream" })
+        });
+    } catch (err) {
+        console.error('Error creating record:', err);
+        return res.status(500).send('Failed to create record.');
+    }
+
 
     // Get text from files
     // for (const file in savedNames) {
     //     console.log(savedNames[file])
-    //     const text = await extractor.extractText({ input: `${filesDir}/${savedNames[file]}`, type: 'file' })
+    //     const text = await extractor.extractText({ input: ${filesDir}/${savedNames[file]}, type: 'file' })
     //     console.log(text)
     // }
 

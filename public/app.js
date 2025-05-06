@@ -8,7 +8,6 @@ function closeForm() {
     form.style.display = "none"
 }
 
-// app.js (front-end)
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file');
