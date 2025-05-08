@@ -240,6 +240,7 @@ button:focus {
 	align-items: flex-end;
 	color: var(--text);
 	box-sizing: border-box;
+	text-decoration: none;
 }
 
 .projectCard:hover {
@@ -265,7 +266,7 @@ button:focus {
 .projectText h3 {
 	margin-bottom: 0.5rem;
 	font-family: "Crimson Text", serif;
-	font-weight: 600;
+	font-weight: 700;
 	font-size: 3rem;
 	line-height: 1.2;
 }

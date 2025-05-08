@@ -37,13 +37,15 @@
                     </div>
                     <div id="projects">
                         <% for( let i = 0; i < locals.projects.length; i++ ) { %>
-                            <div class="projectCard">
-                                <p class="material-symbols-outlined"><%= locals.projects[i].icon.toLowerCase() %></p>
-                                <div class="projectText">
-                                    <h3><%= locals.projects[i].title %></h3>
-                                    <p><%= locals.projects[i].desc %></p>
+                            <a href="/projects?id=<%= locals.projects[i].id %>" class="projectCard">
+                                <div class="" href="/project">
+                                    <p class="material-symbols-outlined"><%= locals.projects[i].icon.toLowerCase() %></p>
+                                    <div class="projectText">
+                                        <h3><%= locals.projects[i].title %></h3>
+                                        <p><%= locals.projects[i].desc %></p>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                         <% } %>
                     </div>
                 <% } else { %>

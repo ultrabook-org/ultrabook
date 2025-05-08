@@ -56,8 +56,6 @@ class Message {
     }
 }
 
-const messages = [];
-
 app.get("/home", async (req, res) => {
     try {
         // 1. Ensure user is authenticated
@@ -172,6 +170,7 @@ app.post("/new-project", async (req, res) => {
         title,
         desc,
         files: savedNames,
+        id: projectRecord.id
       });
     
     res.redirect("/home");
@@ -188,6 +187,11 @@ app.post("/new-project", async (req, res) => {
     //     console.log(text)
     // }
   });
+
+app.get("/projects", async (req, res) => {
+  console.log(req.query.id)
+  res.redirect("/home")
+})
 
 app.post("/gen", async (req, res) => {
 	try {
