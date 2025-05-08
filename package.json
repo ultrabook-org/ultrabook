@@ -10,19 +10,24 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@langchain/community": "^0.3.42",
+    "@langchain/core": "^0.3.55",
+    "@langchain/textsplitters": "^0.1.0",
     "axios": "^1.7.7",
     "body-parser": "^1.20.3",
-    "chromadb-default-embed": "^2.13.2",
+    "chromadb": "^2.4.3",
     "ejs": "^3.1.10",
     "express": "^4.21.0",
     "express-fileupload": "^1.5.1",
-    "form-data": "^4.0.2",
     "fs": "^0.0.1-security",
+    "langchain": "^0.3.24",
+    "mammoth": "^1.9.0",
     "mime-types": "^3.0.1",
-    "multer": "^1.4.5-lts.2",
     "nodemon": "^3.1.7",
-    "office-text-extractor": "^3.0.3",
+    "officeparser": "^4.2.0",
+    "pdf-parse": "^1.1.1",
     "pocketbase": "^0.26.0",
-    "pocketbase-node": "^0.0.3"
+    "pocketbase-node": "^0.0.3",
+    "word-extractor": "^1.0.4"
   }
 }

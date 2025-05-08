@@ -6,3 +6,5 @@ Using [Ollama](https://ollama.com/) to act as a backend, you can upload document
 
 ### TODO:
  - Add functionality
+
+Requires ChromaDB to be installed with pip

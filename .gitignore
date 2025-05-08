@@ -1,2 +1,4 @@
 node_modules/
 files/
+chroma_data/
+chroma.log

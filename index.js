@@ -4,15 +4,18 @@ import e from 'express';
 import { fileURLToPath } from 'node:url';
 import path, { dirname } from 'node:path';
 import fs from 'node:fs';
-import { getTextExtractor } from 'office-text-extractor';
 import fileUpload from 'express-fileupload';
 import PocketBase from 'pocketbase';
-import { readFile } from "node:fs/promises";
+import { ChromaClient, OllamaEmbeddingFunction } from "chromadb";
 import mime from 'mime-types';
+import { MultiFileLoader } from "langchain/document_loaders/fs/multi_file";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
+import { PPTXLoader } from "@langchain/community/document_loaders/fs/pptx";
+import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const app = e();
 const port = 3000;
-const extractor = getTextExtractor()
 const pb = new PocketBase('http://127.0.0.1:8090');
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,7 +32,21 @@ if (!fs.existsSync(filesDir)) {
 }
 
 const ollamaURL = "http://localhost:11434/api";
-const model = "llama3.2";
+const model = "llama3.1:8b";
+
+const client = new ChromaClient({
+  path: "http://localhost:8000",
+});
+
+const embedder = new OllamaEmbeddingFunction({
+  url: "http://localhost:11434/api/embeddings",
+  model: "snowflake-arctic-embed2",
+});
+
+const textSplitter = new RecursiveCharacterTextSplitter({
+  chunkSize: 200,
+  chunkOverlap: 0,
+});
 
 const projects = [];
 
@@ -156,15 +173,14 @@ app.post("/new-project", async (req, res) => {
       desc,
       sources: savedNames.map(name => {
         const fullPath = path.join(filesDir, name);
-        const buffer = fs.readFileSync(fullPath);    // read as Buffer :contentReference[oaicite:5]{index=5}
+        const buffer = fs.readFileSync(fullPath);
         const contentType = mime.lookup(fullPath) || 'application/octet-stream';
-        return new File([buffer], name, { type: contentType });  // File is global in Node 18+ :contentReference[oaicite:6]{index=6}
+        return new File([buffer], name, { type: contentType });
       }),
     };
 
     // 4) Create record (auto multipart)
     const projectRecord = await pb.collection('projects').create(recordData);
-    console.log('Created:', projectRecord);
     projects.push({
         icon: 'favorite',
         title,
@@ -172,21 +188,40 @@ app.post("/new-project", async (req, res) => {
         files: savedNames,
         id: projectRecord.id
       });
-    
+
+    const collectionName = `${projectRecord.id}`; // Use title and ID for collection name
+    const collection = await client.getOrCreateCollection({
+      name: collectionName,
+      embeddingFunction: embedder,
+    });
+
+    // 5) Load, chunk, embed, and add documents to Chroma using MultiFileLoader
+    const filePaths = savedNames.map(name => path.join(filesDir, name));
+
+    const loaderConfig = {
+      ".docx": (path) => new DocxLoader(path),
+      ".doc": (path) => new DocxLoader(path, {type: "doc"}),
+      ".pdf": (path) => new PDFLoader(path),
+      ".pptx": (path) => new PPTXLoader(path),
+    };
+
+    const loader = new MultiFileLoader(filePaths, loaderConfig);
+    const documents = await loader.load();
+
+    let docID = 0
+    for (const chunk of documents) {
+      await collection.add({
+        documents: [chunk.pageContent],
+        ids: [`chunk_${docID}`],
+      });
+      docID += 1
+    }
     res.redirect("/home");
   } catch (err) {
     console.error('Error creating record:', err);
     return res.status(500).send('Failed to create record.');
   }
-
-
-    // Get text from files
-    // for (const file in savedNames) {
-    //     console.log(savedNames[file])
-    //     const text = await extractor.extractText({ input: ${filesDir}/${savedNames[file]}, type: 'file' })
-    //     console.log(text)
-    // }
-  });
+});
 
 app.get("/projects", async (req, res) => {
   console.log(req.query.id)
