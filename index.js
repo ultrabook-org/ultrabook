@@ -91,7 +91,7 @@ app.get("/home", async (req, res) => {
     
         // 3. Build local projects array
         const projects = records.map(rec => ({
-          icon: 'favorite',
+          icon: rec.icon,
           title: rec.title,
           desc: rec.desc,
           id: rec.id,
@@ -182,7 +182,7 @@ app.post("/new-project", async (req, res) => {
     // 4) Create record (auto multipart)
     const projectRecord = await pb.collection('projects').create(recordData);
     projects.push({
-        icon: 'favorite',
+        icon: 'heart',
         title,
         desc,
         files: savedNames,

@@ -55,13 +55,3 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
-document.addEventListener("DOMContentLoaded", (event) => {
-    gsap.registerPlugin(SplitText)
-    const split = SplitText.create("#heading")
-    gsap.from(split.chars, {
-      y: 20,
-      autoAlpha: 0,
-      stagger: 0.05
-    })
-});
