@@ -165,10 +165,13 @@ app.post("/new-project", async (req, res) => {
     savedNames.push(file.name);
   }
 
+  const icon = "fa-heart"
+
   try {
     // 3) Build record data with File instances
     const recordData = {
       owner: ownerId,
+      icon,
       title,
       desc,
       sources: savedNames.map(name => {
@@ -182,12 +185,14 @@ app.post("/new-project", async (req, res) => {
     // 4) Create record (auto multipart)
     const projectRecord = await pb.collection('projects').create(recordData);
     projects.push({
-        icon: 'heart',
+        icon,
         title,
         desc,
         files: savedNames,
         id: projectRecord.id
       });
+
+    console.log(projects[projects.length - 1].icon)
 
     const collectionName = `${projectRecord.id}`; // Use title and ID for collection name
     const collection = await client.getOrCreateCollection({

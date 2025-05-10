@@ -1,6 +1,40 @@
+:root {
+  --pink: #ffb3c6;
+  --pink-border: #c97b8e;
+  --dark-pink: #c97b8e;
+  --text: rgb(22, 22, 22);
+  --vivid-pink: rgb(252, 128, 161);
+}
+
 html,
 body {
   height: 100%;
+  color: var(--text);
+}
+
+.bg-pink {
+  background-color: var(--pink);
+  color: var(--text);
+  border: #c97b8e;
+  transition: 0.25s;
+}
+
+.bg-pink:hover {
+  background-color: var(--vivid-pink);
+  color: var(--text);
+  border: #c97b8e;
+}
+
+.pink {
+  color: var(--pink);
+}
+
+.vivid-pink {
+  color: var(--vivid-pink);
+}
+
+.large-icon {
+  font-size: 2rem;
 }
 
 .form-signin {
@@ -18,7 +52,21 @@ body {
   border-bottom-left-radius: 0;
 }
 
-.form-signin input[type="password"] {
+#floatingPassword {
+  margin-bottom: -1px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#floatingPasswordLogin {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+#floatingPasswordConf {
   margin-bottom: 10px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
