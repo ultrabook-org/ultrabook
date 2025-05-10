@@ -25,6 +25,18 @@ body {
   border: #c97b8e;
 }
 
+.bg-pink:focus {
+  background-color: var(--dark-pink);
+  color: white;
+  border: var(--pink-border);
+}
+
+.bg-pink:hover:focus {
+  background-color: var(--dark-pink);
+  color: white;
+  border: var(--pink-border);
+}
+
 .pink {
   color: var(--pink);
 }

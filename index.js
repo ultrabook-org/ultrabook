@@ -117,6 +117,10 @@ app.get("/swap", async (req, res) => {
   }
 })
 
+app.get("/chat", async (req, res) => {
+  res.render("chat.ejs")
+})
+
 app.post("/auth-user", async (req, res) => {
     const { email, password, confirmPassword, action } = req.body
     if (action === "register") {
@@ -192,8 +196,6 @@ app.post("/new-project", async (req, res) => {
         id: projectRecord.id
       });
 
-    console.log(projects[projects.length - 1].icon)
-
     const collectionName = `${projectRecord.id}`; // Use title and ID for collection name
     const collection = await client.getOrCreateCollection({
       name: collectionName,
@@ -229,8 +231,8 @@ app.post("/new-project", async (req, res) => {
 });
 
 app.get("/projects", async (req, res) => {
-  console.log(req.query.id)
-  res.redirect("/home")
+  const project = await pb.collection('projects').getOne(req.query.id)
+  res.render("chat.ejs", { project: project });
 })
 
 app.post("/gen", async (req, res) => {

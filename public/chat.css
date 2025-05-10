@@ -1,0 +1,18 @@
+body {
+    background-color: #ffb3c6;
+    min-height: 100vh;
+    padding: 20px;
+    overflow-y: hidden;
+}
+
+.container {
+  height: calc(100vh - 5px);
+}
+
+.col, .col-6 {
+  background-color: white;
+}
+
+.full-height {
+  height: calc(100vh - 40px);
+}
