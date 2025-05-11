@@ -37,7 +37,6 @@ const chatModel = new ChatOllama({ model: "llama3.1:8b" });
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 200, chunkOverlap: 0 });
 
 const projects = [];
-const chat = []
 
 app.get("/", async (req, res) => {
     res.render("index.ejs", { register: true });
@@ -89,6 +88,11 @@ app.get("/swap", async (req, res) => {
 
 app.get("/projects", async (req, res) => {
   const project = await pb.collection('projects').getOne(req.query.id)
+  let chat = []
+  if (project.conversation) {
+    chat = JSON.parse(project.conversation)
+  }
+
   res.render("chat.ejs", { project: project, chat: chat });
 })
 
@@ -270,10 +274,15 @@ class Message {
 app.post("/gen", async (req, res) => {
   const promptText = req.body.prompt;
   const projectID = req.body.projectID;
-  chat.push(new Message("user", promptText))
   
   try {
     const project = await pb.collection("projects").getOne(projectID)
+    let chat = []
+    if (project.conversation) {
+      chat = JSON.parse(project.conversation)
+    }
+
+    chat.push(new Message("user", promptText))
 
     // 1) Initialize vector store for this project
     const vectorStore = new Chroma(embedder, { collectionName: projectID });
@@ -282,7 +291,7 @@ app.post("/gen", async (req, res) => {
     const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
       [
         "system",
-        "You are provided multiple context items that are related to the prompt you have to answer. Use the following pieces of context to respond to the prompt at the end.\n\n{context}",
+        "You are provided multiple context items that are related to the prompt you have to answer. Use the following pieces of context to respond to the prompt at the end.\n\n{context}\n",
       ],
       ["human", "{input}"],
     ]);
@@ -305,12 +314,17 @@ app.post("/gen", async (req, res) => {
     // 5) Run it
     const response = await chain.invoke({ input: promptText });
     const answer   = response.answer;
-    const sources  = response.context;
-    console.log(answer)
 
     // 4) Record chat and render
     // (Assumes you pass `chat` into your template for rendering)
     chat.push({ sender: 'assistant', message: answer });
+
+    // 5) Store chat in PocketBase
+    const chatData = {
+      "conversation": JSON.stringify(chat)
+    }
+    await pb.collection("projects").update(projectID, chatData)
+    
     res.render('chat.ejs', { project: project, chat: chat });
   } catch (err) {
     console.error('Error in /gen:', err);
