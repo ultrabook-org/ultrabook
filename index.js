@@ -118,6 +118,14 @@ app.post("/auth-user", async (req, res) => {
     }
 })
 
+const loaderConfig = {
+      ".docx": (path) => new DocxLoader(path),
+      ".doc": (path) => new DocxLoader(path, {type: "doc"}),
+      ".pdf": (path) => new PDFLoader(path),
+      ".pptx": (path) => new PPTXLoader(path),
+    };
+
+
 app.post("/new-project", async (req, res) => {
   const { title, desc } = req.body;
   const ownerId = pb.authStore.record.id;
@@ -174,13 +182,6 @@ app.post("/new-project", async (req, res) => {
     // 5) Load, chunk, embed, and add documents to Chroma using MultiFileLoader
     const filePaths = savedNames.map(name => path.join(filesDir, name));
 
-    const loaderConfig = {
-      ".docx": (path) => new DocxLoader(path),
-      ".doc": (path) => new DocxLoader(path, {type: "doc"}),
-      ".pdf": (path) => new PDFLoader(path),
-      ".pptx": (path) => new PPTXLoader(path),
-    };
-
     const loader = new MultiFileLoader(filePaths, loaderConfig);
     const documents = await loader.load();
     const splits = await textSplitter.splitDocuments(documents)
@@ -193,6 +194,63 @@ app.post("/new-project", async (req, res) => {
     return res.status(500).send('Failed to create record.');
   }
 });
+
+app.post("/upload-file", async (req, res) => {
+  const ownerId = pb.authStore.record.id;
+  const projectId = req.body.projectID;
+  const project = await pb.collection("projects").getOne(projectId);
+  const filesDir = path.join(__dirname, `files/${ownerId}/${project.title}`);
+
+  // 1) Ensure directory exists
+  if (!fs.existsSync(filesDir)) {
+    fs.mkdirSync(filesDir, { recursive: true });
+  }
+
+  // 2) Save incoming uploads to disk
+  const uploaded = req.files?.files;
+  const filesArray = uploaded
+    ? (Array.isArray(uploaded) ? uploaded : [uploaded])
+    : [];
+  const savedNames = [];
+  for (const file of filesArray) {
+    const savePath = path.join(filesDir, file.name);
+    await file.mv(savePath);
+    savedNames.push(file.name);
+  }
+
+  try {
+    const recordSources = {
+      "sources+": savedNames.map(name => {
+        const fullPath = path.join(filesDir, name);
+        const buffer = fs.readFileSync(fullPath);
+        const contentType = mime.lookup(fullPath) || 'application/octet-stream';
+        return new File([buffer], name, { type: contentType });
+      }),
+    };
+
+    // 4) Update record (auto multipart)
+    const projectRecord = await pb.collection('projects').update(projectId, recordSources)
+
+    const collectionName = `${projectRecord.id}`;
+    const collection = new Chroma(embedder, {
+      collectionName: collectionName
+    })
+
+    // 5) Load, chunk, embed, and add documents to Chroma using MultiFileLoader
+    const filePaths = savedNames.map(name => path.join(filesDir, name));
+
+    const loader = new MultiFileLoader(filePaths, loaderConfig);
+    const documents = await loader.load();
+    const splits = await textSplitter.splitDocuments(documents)
+    
+    await collection.addDocuments(splits);
+
+    res.redirect(`/projects?id=${projectId}`);
+  } catch (err) {
+    console.error('Error creating record:', err);
+    return res.status(500).send('Failed to create record.');
+  }
+})
 
 class Message {
     constructor(sender, message) {
