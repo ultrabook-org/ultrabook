@@ -15,7 +15,7 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { createRetrievalChain } from "langchain/chains/retrieval";
 import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
-import { OllamaEmbeddings, ChatOllama } from "@langchain/ollama";
+import { OllamaEmbeddings, ChatOllama, Ollama } from "@langchain/ollama";
 
 const app = express();
 const port = 3000;
@@ -33,7 +33,8 @@ if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir, { recursive: true });
 
 // Ollama settings
 const embedder = new OllamaEmbeddings({ model: "snowflake-arctic-embed2" });
-const chatModel = new ChatOllama({ model: "llama3.1:8b" });
+let modelList = new Ollama()
+modelList = await modelList.client.list()
 const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 200, chunkOverlap: 0 });
 
 const projects = [];
@@ -64,6 +65,7 @@ app.get("/home", async (req, res) => {
           title: rec.title,
           desc: rec.desc,
           id: rec.id,
+          model: rec.model,
         }));
     
         // 4. Render view with fetched projects
@@ -92,8 +94,15 @@ app.get("/projects", async (req, res) => {
   if (project.conversation) {
     chat = JSON.parse(project.conversation)
   }
+  res.render("chat.ejs", { project: project, chat: chat, models: modelList });
+})
 
-  res.render("chat.ejs", { project: project, chat: chat });
+app.get("/switch-model", async (req, res) => {
+  const newModel = {
+    model: req.query.selected
+  }
+  const project = await pb.collection('projects').update(req.query.id, newModel)
+  res.redirect(`/projects?id=${req.query.id}`)
 })
 
 app.post("/auth-user", async (req, res) => {
@@ -167,6 +176,7 @@ app.post("/new-project", async (req, res) => {
         const contentType = mime.lookup(fullPath) || 'application/octet-stream';
         return new File([buffer], name, { type: contentType });
       }),
+      model: "llama3.1:8b",
     };
 
     // 4) Create record (auto multipart)
@@ -297,8 +307,9 @@ app.post("/gen", async (req, res) => {
     ]);
 
     // 2) Create the combine-documents chain (it’s a Runnable)
+    const LLM = new ChatOllama({ model: project.model });
     const combineDocsChain = await createStuffDocumentsChain({
-      llm: chatModel,          // your ChatOllama instance
+      llm: LLM,          // your ChatOllama instance
       prompt: questionAnsweringPrompt,  // the template above
     });
 
@@ -317,7 +328,7 @@ app.post("/gen", async (req, res) => {
 
     // 4) Record chat and render
     // (Assumes you pass `chat` into your template for rendering)
-    chat.push({ sender: 'assistant', message: answer });
+    chat.push({ sender: project.model.split(":")[0], message: answer });
 
     // 5) Store chat in PocketBase
     const chatData = {
@@ -325,7 +336,7 @@ app.post("/gen", async (req, res) => {
     }
     await pb.collection("projects").update(projectID, chatData)
     
-    res.render('chat.ejs', { project: project, chat: chat });
+    res.render('chat.ejs', { project: project, chat: chat, models: modelList });
   } catch (err) {
     console.error('Error in /gen:', err);
     res.status(500).send('Chat generation failed.');
