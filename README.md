@@ -16,7 +16,7 @@ Start by creating your account then make your first project. Either upload files
 ### Installation Guide:
 1. Clone the repository:
 ```bash
-git clone https://github.com/diva-in-STEM/local-llm.git
+git clone https://github.com/diva-in-STEM/keep.ai.git
 ```
 
 2. Create a directory for Chroma
