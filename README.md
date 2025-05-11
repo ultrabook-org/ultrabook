@@ -1,5 +1,5 @@
 # keep.ai
-A FOSS, self-hosted replacement for [Google's NotebookLM](https://notebooklm.google/) for the environmentally conscious
+A FOSS, self-hosted replacement for [Google's NotebookLM](https://notebooklm.google/) for those who want more control
 
 ### Table of contents
  - [How it works](#how-it-works)
