@@ -71,3 +71,7 @@ body {
   align-items: center;
   border: 2px dashed #6c757d;
 }
+
+.card:hover i {
+  color: white;
+}
