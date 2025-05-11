@@ -1,77 +1,47 @@
-import axios from 'axios';
 import bodyParser from 'body-parser';
-import e from 'express';
+import express from 'express';
 import { fileURLToPath } from 'node:url';
 import path, { dirname } from 'node:path';
 import fs from 'node:fs';
 import fileUpload from 'express-fileupload';
 import PocketBase from 'pocketbase';
-import { ChromaClient, OllamaEmbeddingFunction } from "chromadb";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
 import mime from 'mime-types';
 import { MultiFileLoader } from "langchain/document_loaders/fs/multi_file";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 import { PPTXLoader } from "@langchain/community/document_loaders/fs/pptx";
 import { DocxLoader } from "@langchain/community/document_loaders/fs/docx";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+import { ChatPromptTemplate } from "@langchain/core/prompts";
+import { createRetrievalChain } from "langchain/chains/retrieval";
+import { createStuffDocumentsChain } from "langchain/chains/combine_documents";
+import { OllamaEmbeddings, ChatOllama } from "@langchain/ollama";
 
-const app = e();
+const app = express();
 const port = 3000;
 const pb = new PocketBase('http://127.0.0.1:8090');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-app.use(e.static(`${__dirname}/public`));
+app.use(express.static(`${__dirname}/public`));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(fileUpload({
-    createParentPath: true,
-}));
+app.use(fileUpload({ createParentPath: true }));
 
+// Ensure files directory
 const filesDir = path.join(__dirname, 'files');
-if (!fs.existsSync(filesDir)) {
-  fs.mkdirSync(filesDir, { recursive: true });
-}
+if (!fs.existsSync(filesDir)) fs.mkdirSync(filesDir, { recursive: true });
 
-const ollamaURL = "http://localhost:11434/api";
-const model = "llama3.1:8b";
-
-const client = new ChromaClient({
-  path: "http://localhost:8000",
-});
-
-const embedder = new OllamaEmbeddingFunction({
-  url: "http://localhost:11434/api/embeddings",
-  model: "snowflake-arctic-embed2",
-});
-
-const textSplitter = new RecursiveCharacterTextSplitter({
-  chunkSize: 200,
-  chunkOverlap: 0,
-});
+// Ollama settings
+const embedder = new OllamaEmbeddings({ model: "snowflake-arctic-embed2" });
+const chatModel = new ChatOllama({ model: "llama3.1:8b" });
+const textSplitter = new RecursiveCharacterTextSplitter({ chunkSize: 200, chunkOverlap: 0 });
 
 const projects = [];
+const chat = []
 
 app.get("/", async (req, res) => {
     res.render("index.ejs", { register: true });
 });
-
-app.get("/ingest", async (req, res) => {
-    res.render("ingest.ejs");
-});
-
-class Message {
-    constructor(sender, message) {
-        this.sender = sender;
-        this.message = message;
-    }
-
-    getSender() {
-        return this.sender;
-    }
-
-    getMessage() {
-        return this.message;
-    }
-}
 
 app.get("/home", async (req, res) => {
     try {
@@ -117,8 +87,9 @@ app.get("/swap", async (req, res) => {
   }
 })
 
-app.get("/chat", async (req, res) => {
-  res.render("chat.ejs")
+app.get("/projects", async (req, res) => {
+  const project = await pb.collection('projects').getOne(req.query.id)
+  res.render("chat.ejs", { project: project, chat: chat });
 })
 
 app.post("/auth-user", async (req, res) => {
@@ -169,7 +140,7 @@ app.post("/new-project", async (req, res) => {
     savedNames.push(file.name);
   }
 
-  const icon = "fa-heart"
+  const icon = "bi-stars"
 
   try {
     // 3) Build record data with File instances
@@ -192,15 +163,13 @@ app.post("/new-project", async (req, res) => {
         icon,
         title,
         desc,
-        files: savedNames,
         id: projectRecord.id
       });
 
-    const collectionName = `${projectRecord.id}`; // Use title and ID for collection name
-    const collection = await client.getOrCreateCollection({
-      name: collectionName,
-      embeddingFunction: embedder,
-    });
+    const collectionName = `${projectRecord.id}`;
+    const collection = new Chroma(embedder, {
+      collectionName: collectionName
+    })
 
     // 5) Load, chunk, embed, and add documents to Chroma using MultiFileLoader
     const filePaths = savedNames.map(name => path.join(filesDir, name));
@@ -214,15 +183,10 @@ app.post("/new-project", async (req, res) => {
 
     const loader = new MultiFileLoader(filePaths, loaderConfig);
     const documents = await loader.load();
+    const splits = await textSplitter.splitDocuments(documents)
+    
+    await collection.addDocuments(splits);
 
-    let docID = 0
-    for (const chunk of documents) {
-      await collection.add({
-        documents: [chunk.pageContent],
-        ids: [`chunk_${docID}`],
-      });
-      docID += 1
-    }
     res.redirect("/home");
   } catch (err) {
     console.error('Error creating record:', err);
@@ -230,112 +194,71 @@ app.post("/new-project", async (req, res) => {
   }
 });
 
-app.get("/projects", async (req, res) => {
-  const project = await pb.collection('projects').getOne(req.query.id)
-  res.render("chat.ejs", { project: project });
-})
+class Message {
+    constructor(sender, message) {
+        this.sender = sender;
+        this.message = message;
+    }
+
+    getSender() {
+        return this.sender;
+    }
+
+    getMessage() {
+        return this.message;
+    }
+}
 
 app.post("/gen", async (req, res) => {
-	try {
-		const prompt = req.body.prompt;
-		messages.push(new Message("user", prompt));
-		const result = await axios
-			.post(`${ollamaURL}/generate`, {
-				model: model,
-				prompt: prompt,
-				stream: false,
-			})
-			.then((response) => {
-				const reply = response.data.response;
-				messages.push(new Message("system", reply));
-				res.render("index.ejs", { messages: messages });
-			});
-	} catch (error) {
-		messages.push(new Message("system", error.response.data));
-		res.render("index.ejs", { messages: messages });
-	}
-});
+  const promptText = req.body.prompt;
+  const projectID = req.body.projectID;
+  chat.push(new Message("user", promptText))
+  
+  try {
+    const project = await pb.collection("projects").getOne(projectID)
 
-app.post("/ingest", async (req, res) => {
-    const file = req.files.myFile;
-    const path = `${__dirname}/files/${file.name}`;
-    const nameList = file.name.split(".");
-    const extension = nameList[nameList.length - 1];
-    const allowedExtensions = ['txt', 'pdf'];
+    // 1) Initialize vector store for this project
+    const vectorStore = new Chroma(embedder, { collectionName: projectID });
 
-    if (!allowedExtensions.includes(extension)) {
-        return res.status(422).send("Invalid FileType");
-    }
+    // 1) Prepare a prompt template with a `{context}` slot
+    const questionAnsweringPrompt = ChatPromptTemplate.fromMessages([
+      [
+        "system",
+        "You are provided multiple context items that are related to the prompt you have to answer. Use the following pieces of context to respond to the prompt at the end.\n\n{context}",
+      ],
+      ["human", "{input}"],
+    ]);
 
-    file.mv(path, async (err) => {
-        if (err) {
-            return res.status(500).send(err);
-        }
-        
-        fs.readFile(path, 'utf8', async (err, data) => {
-            if (err) {
-                return res.status(500).send(err);
-            }
-            
-            // Split the document into paragraphs based on line breaks
-            const paragraphs = data.split(/\n\s*\n/); // Regex to split by blank lines
-
-            // Embed and store each paragraph in the collection
-            for (const [i, paragraph] of paragraphs.entries()) {
-                if (paragraph.trim()) {
-                    await collection.add({
-                        ids: [`para_${i}`],
-                        documents: [paragraph],
-                    });
-                }
-            }
-             
-            res.render("ingest.ejs", { hasData: true });
-        });
+    // 2) Create the combine-documents chain (it’s a Runnable)
+    const combineDocsChain = await createStuffDocumentsChain({
+      llm: chatModel,          // your ChatOllama instance
+      prompt: questionAnsweringPrompt,  // the template above
     });
+
+    // 3) Get your retriever
+    const retriever = vectorStore.asRetriever();
+
+    // 4) Finally, build the RetrievalChain correctly
+    const chain = await createRetrievalChain({
+      combineDocsChain,
+      retriever,
+    });
+
+    // 5) Run it
+    const response = await chain.invoke({ input: promptText });
+    const answer   = response.answer;
+    const sources  = response.context;
+    console.log(answer)
+
+    // 4) Record chat and render
+    // (Assumes you pass `chat` into your template for rendering)
+    chat.push({ sender: 'assistant', message: answer });
+    res.render('chat.ejs', { project: project, chat: chat });
+  } catch (err) {
+    console.error('Error in /gen:', err);
+    res.status(500).send('Chat generation failed.');
+  }
 });
-
-const docMessages = [];
-
-app.post("/docChat", async (req, res) => {
-    const prompt = req.body.prompt;
-    docMessages.push(new Message('user', prompt));
-    
-    try {
-        // Retrieve top 5 matching documents to provide a broader context
-        const bestDocs = await collection.query({
-            queryTexts: [prompt],
-            nResults: 5,  // Increase nResults to broaden context
-        });
-
-        // Check if relevant documents are being retrieved
-        console.log("Retrieved Documents:", bestDocs.documents);
-        
-        // Combine top retrieved documents into a single context
-        const combinedDoc = bestDocs.documents.map(doc => doc).join("\n\n");
-
-        // Revised generation prompt to make it clear that the model should use the retrieved context only
-        const generationPrompt = `Context: \n\n${combinedDoc}\n\nBased on the above context, respond to this question: "${prompt}". Your answer should use only the information provided in the context above. Do not speculate or add any information beyond what is given in the context.`;
-
-        const response = await axios.post(`${ollamaURL}/generate`, {
-            model: model,
-            prompt: generationPrompt,
-            stream: false,
-        });
-
-        // Log response for debugging purposes
-        console.log("Generated Response:", response.data.response);
-
-        // Add the model's response to the chat history and render it on the page
-        docMessages.push(new Message('system', response.data.response));
-        res.render("ingest.ejs", { hasData: true, messages: docMessages });
-        
-    } catch (error) {
-        console.error("Error:", error);
-        res.render("ingest.ejs", { hasData: true, result: error.response?.data || "An error occurred." });
-    }
-});
-
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

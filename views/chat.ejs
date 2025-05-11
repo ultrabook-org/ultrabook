@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat Interface</title>
+    <title>keep</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="chat.css">
 </head>
@@ -11,18 +12,64 @@
     <div class="container-fluid m-auto">
         <div class="full-height row">
             <div class="col rounded shadow p-3" id="sources">
-                <h2>Sources</h2>
+                <h2 >Sources</h2>
                 <p class="opacity-75">Upload new content or remove it here</p>
+                <div id="source-list" class="d-flex flex-wrap">
+                    <% const sources = locals.project.sources %>
+                    <% for( let i = 0; i < sources.length; i++ ) { %>
+                        <button class="btn btn-outline-secondary mb-2">
+                            <% let fileType = sources[i].split(".") %>
+                            <% fileType = fileType[fileType.length - 1] %>
+                            <% if (fileType === "pdf") { %>
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                            <% } else if (fileType === "doc") { %>
+                                <i class="bi bi-file-earmark-doc-fill"></i>
+                            <% } else if (fileType === "docx") { %>
+                                <i class="bi bi-file-earmark-docx-fill"></i>
+                            <% } else { %>
+                                <i class="bi bi-file-earmark-text-fill"></i>
+                            <% } %>
+                            <%= sources[i] %>
+                        </button>
+                    <% } %>
+                </div>
             </div>
             <div class="col col-md-6 ms-3 rounded shadow p-3" id="chat">
-                <h2><%= locals.project.title %></h2>
+                <h2 ><%= locals.project.title %></h2>
                 <p class="opacity-75">Model dropdown here</p>
+
+                <div class="chat-features">
+                    <div id="conversation" class="mt-3 mb-3">
+                        <!-- Conversation messages will go here -->
+                        <% const chat = locals.chat %>
+                        <% for (let i = 0; i < chat.length; i++) { %>
+                            <div class="d-flex align-items-start">
+                                <% const sender = chat[i].sender %>
+                                <% if (sender === "assistant") { %>
+                                    <i class="bi bi-robot"></i>
+                                <% } else { %>
+                                    <i class="bi bi-person-fill"></i>
+                                <% } %>
+                                <p class="ms-3"><%= chat[i].message %></p>
+                            </div>
+                        <% } %>
+                    </div>
+
+                    <form action="/gen" method="post" class="w-100">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" name="prompt" id="prompt" placeholder="Enter a prompt" aria-label="Enter a prompt" aria-describedby="send">
+                            <input type="hidden" name="projectID" id="projectID" value="<%= locals.project.id %>">
+                            <button class="btn btn-outline-secondary" type="submit" id="send"><i class="bi bi-send-fill"></i></button>
+                        </div>
+                    </form>
+                </div>
             </div>
             <div class="col ms-3 rounded shadow p-3" id="other">
-                <h2>Podcast</h2>
+                <h2 >Podcast</h2>
                 <p class="opacity-75">This is gonna be a super cool podcast section soon!</p>
             </div>
         </div>
     </div>
+    <script src="app.js"></script>
 </body>
 </html>

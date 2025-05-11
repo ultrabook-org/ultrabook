@@ -1,13 +1,3 @@
-const form = document.getElementById("createProjectForm")
-
-function createProject() {
-    form.style.display = "flex"
-}
-
-function closeForm() {
-    form.style.display = "none"
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file');
