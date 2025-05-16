@@ -5,10 +5,10 @@ from django.db.models.functions import Now
 class Project(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
-    description = models.TextField()
-    created_at = models.DateTimeField(db_default=Now())
+    desc = models.TextField()
+    icon = models.TextField(db_default="stars")
+    created_at = models.DateTimeField(auto_now_add=True)
     ai_model = models.CharField(max_length=100)
-    files = models.ManyToManyField('File', related_name='projects')
 
     def __str__(self):
         return self.title
@@ -16,7 +16,7 @@ class Project(models.Model):
 class File(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     file = models.FileField(upload_to='project_files/')
-    uploaded_at = models.DateTimeField(db_default=Now())
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"File {self.file.name} for {self.project.title}"

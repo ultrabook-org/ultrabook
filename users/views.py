@@ -14,7 +14,7 @@ def loginPage(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect(reverse('home'))
+            return redirect(reverse('home:home'))
         else:
             return render(request, "users/login.html", {
                 "error_message": "Invalid email or password"

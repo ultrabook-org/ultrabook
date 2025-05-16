@@ -1,0 +1,77 @@
+:root {
+  --pink: #ffb3c6;
+  --pink-border: #c97b8e;
+  --dark-pink: #c97b8e;
+  --text: rgb(22, 22, 22);
+  --vivid-pink: rgb(252, 128, 161);
+}
+
+html,
+body {
+  height: 100%;
+  color: var(--text);
+}
+
+.bg-pink {
+  background-color: var(--pink);
+  color: var(--text);
+  border: #c97b8e;
+  transition: 0.25s;
+}
+
+.bg-pink:hover {
+  background-color: var(--vivid-pink);
+  color: var(--text);
+  border: #c97b8e;
+}
+
+.bg-pink:focus {
+  background-color: var(--dark-pink);
+  color: white;
+  border: var(--pink-border);
+}
+
+.bg-pink:hover:focus {
+  background-color: var(--dark-pink);
+  color: white;
+  border: var(--pink-border);
+}
+
+.pink {
+  color: var(--pink);
+}
+
+.vivid-pink {
+  color: var(--vivid-pink);
+}
+
+.large-icon {
+  font-size: 2rem;
+}
+
+#anchorCard {
+  text-decoration: none;
+  color: rgb(22, 22, 22);
+}
+
+#floatingTitle {
+  margin-bottom: -1px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+#floatingDesc {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+#file-upload {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed #6c757d;
+}
+
+.card:hover i {
+  color: white;
+}
