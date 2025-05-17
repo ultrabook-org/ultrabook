@@ -1,40 +1,80 @@
-body {
-    background-color: #ffb3c6;
-    min-height: 100vh;
-    padding: 20px;
-    overflow-y: hidden;
+/* 1. Make html/body fill the viewport */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-.container {
-  height: calc(100vh - 5px);
+/* 1. Ensure the row is full‐height and never wraps */
+.container-fluid > .row {
+  height: 100vh;
+  flex-wrap: nowrap;      /* don't allow columns to wrap down */
 }
 
-.col, .col-6 {
-  background-color: white;
+/* 2. Let every .col grow/shrink equally */
+.col, .col-md-6 {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;            /* all columns take equal share of width */
+  min-width: 0;           /* allow inner scrolls to work */
+  overflow: hidden;
 }
 
-.full-height {
-  height: calc(100vh - 40px);
+/* 1) Make the chat column a flex‐column container */
+#chat {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;         /* full viewport height */
+  overflow: hidden;      /* nothing spills out */
+  margin-left: .75rem;   /* your ms-3 equivalent */
 }
 
+/* 2) Drop the “full-height” hack and instead flex the inner wrapper */
 .chat-features {
-  height: 92%;
+  flex: 1 1 auto;        /* fill the column vertically */
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  overflow: hidden;
 }
 
+/* 3) The conversation area grows/scrolls */
 #conversation {
-  height: 95%;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin-bottom: .5rem;  /* give space before the form */
+  padding-right: .5rem;  /* optional, avoid hidden text under scrollbar */
 }
 
-#source-content {
-  height: 92%;
+/* 4) Pin the form at the bottom */
+.chat-features > form {
+  flex: 0 0 auto;
+}
+
+/* 1) Turn the whole Sources column into a columnar flex box */
+#sources {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  height: 100vh;        /* full viewport height */
+  overflow: hidden;     /* no spilling */
 }
 
-#source-content form {
-  border: 2px dashed #6c757d;
+/* 2) Inside it, make the source‑list + form wrapper flex */
+#source-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;       /* fills all available height between header and bottom */
+  overflow: hidden;     /* hide any overflow on the wrapper itself */
+}
+
+/* 3) Let the actual list scroll */
+#source-list {
+  flex: 1 1 auto;       /* grow to fill up #source-content */
+  overflow-y: auto;     /* scroll if too many items */
+}
+
+/* 4) Pin the form at the bottom of #source-content */
+#source-content > form {
+  flex: 0 0 auto;       /* no growing or shrinking */
+  margin-top: 1rem;     /* optional spacing */
 }

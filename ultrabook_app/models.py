@@ -20,15 +20,9 @@ class File(models.Model):
 
     def __str__(self):
         return f"File {self.file.name} for {self.project.title}"
-    
-class Conversation(models.Model):
-    project = models.OneToOneField(Project, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"Conversation for {self.project.title}"
 
 class Message(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
     content = models.TextField()
     is_user = models.BooleanField(db_default=True)
     timestamp = models.DateTimeField(db_default=Now())

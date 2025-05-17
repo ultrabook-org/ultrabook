@@ -211,3 +211,6 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/venv,django,windows
 chroma_data/
+chroma_langchain_db/
+project_files/
+db.sqlite3
