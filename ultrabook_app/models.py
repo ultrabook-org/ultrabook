@@ -7,7 +7,7 @@ class Project(models.Model):
     title = models.CharField(max_length=255)
     desc = models.TextField()
     icon = models.TextField(db_default="stars")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(db_default=Now())
     ai_model = models.CharField(max_length=100)
 
     def __str__(self):
@@ -16,7 +16,7 @@ class Project(models.Model):
 class File(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     file = models.FileField(upload_to='project_files/')
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_at = models.DateTimeField(db_default=Now())
 
     def __str__(self):
         return f"File {self.file.name} for {self.project.title}"

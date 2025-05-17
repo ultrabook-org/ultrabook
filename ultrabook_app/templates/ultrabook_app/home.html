@@ -19,7 +19,7 @@
                 <div id="projects" class="d-flex flex-wrap">
                     {% for project in projects %}
                         <div class="card me-2 mt-5 bg-pink" style="width: 18rem;">
-                            <a href="{% url 'home:home' %}" id="anchorCard">
+                            <a href="{% url 'home:open-project' project_key=project.pk %}" id="anchorCard">
                                 <div class="card-body">
                                     <i class="bi bi-{{ project.icon }} mb-5 vivid-pink large-icon opacity-75"></i>
                                     <h3 class="card-title">{{ project.title }}</h3>

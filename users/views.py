@@ -9,7 +9,6 @@ def loginPage(request):
         return render(request, "users/login.html")
     if request.method == 'POST':
         username = request.POST["username"]
-        print(username)
         password = request.POST["password"]
         user = authenticate(request, username=username, password=password)
         if user is not None:
@@ -31,7 +30,7 @@ def signUp(request):
         if password == confPassword:
             user = User.objects.create_user(username=username, password=password)
             login(request, user)
-            return redirect(reverse('home'))
+            return redirect(reverse('home:home'))
         else:
             return render(request, "users/sign-up.html", {
                 "error_message": "Passwords do not match"
