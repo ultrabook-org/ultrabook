@@ -88,7 +88,7 @@ def new_project(request):
                     Document(
                         page_content=doc.page_content,
                         id=doc.id,
-                        metadata={"file_pk": file_instance.pk}  # Store file PK in metadata
+                        metadata={"source": file_instance.file.name}
                     )
                 )
 
@@ -133,7 +133,7 @@ def upload_file(request):
                     Document(
                         page_content=doc.page_content,
                         id=doc.id,
-                        metadata={"file_pk": file_instance.pk}  # Store file PK in metadata
+                        metadata={"source": file_instance.file.name}
                     )
                 )
 
@@ -238,21 +238,16 @@ def delete_source(request, project_key, file_key):
         embedding_function=embedder,
         persist_directory="./chroma_langchain_db",
     )
-    
-    # Create a retriever object
-    retriever = vector_store.as_retriever()
-    
-    # Query for documents with metadata matching the file_key
-    query = f'metadata.file_pk:{selected_file.pk}'
-    docs = retriever.invoke(query)
-    
-    # Extract document IDs to delete
-    ids_to_delete = [doc.id for doc in docs]
-    
-    # Delete vectors from ChromaDB
+
+    ids_to_delete = []
+    deletion_docs = vector_store.get(include=["metadatas"])
+
+    for idx, metadata in enumerate(deletion_docs["metadatas"]):
+        if metadata.get("source") == selected_file.file.name:
+            ids_to_delete.append(deletion_docs["ids"][idx])
+
     if ids_to_delete:
-        vector_store.delete(ids=ids_to_delete)
-        print("deleted IDs")
+        vector_store.delete(ids_to_delete)
     
     # Delete file record
     selected_file.delete()
