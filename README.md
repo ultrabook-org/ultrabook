@@ -1,81 +1,69 @@
-# keep.ai
-A FOSS, self-hosted replacement for [Google's NotebookLM](https://notebooklm.google/) for the environmentally conscious
+
+# Ultrabook
+
+#### A self-hosted alternative to Google's [NotebookLM](https://notebooklm.google/)
 
 ### Table of contents
- - [How it works](#how-it-works)
- - [Installation](#installation-guide)
- - [Roadmap](#todo)
+- [Installation](#installation)
+- [FAQ](#faq)
+- [Roadmap](#roadmap)
 
-### How it works:
-Keep uses [Ollama](https://ollama.com/) to interact with large language models, [Chroma](https://trychroma.com/) as the vector database (used for storing uploaded documents in a way LLMs can understand,) [PocketBase](https://pocketbase.io/) as the backend for user authentication and project management and [LangChain](https://www.langchain.com/) libraries to connect it all together!
+#### About
+Ultrabook uses [Ollama](https://ollama.com/), [LangChain](https://www.langchain.com/) and [Chroma](https://trychroma.com/) to create a RAG pipeline that lets you chat to your documents! It is a great tool to accelerate research and learning; for example, you might get your chosen model to quiz you on a topic or create the basic structure of essays or other writing, all while keeping your data on device and private.
+## Installation
 
-Start by creating your account then make your first project. Either upload files at creation or do it while chatting (or both.) Then, chat away with the model of your choosing!
-> [!Important]
-> keep is barebones (very batteries not included) for now (11/05/2025) so there is no way to pull models from the web interface. However, you just need to run the `ollama pull {model name}` command from a terminal to add new ones
+> [!IMPORTANT]
+> Requires [Ollama](https://ollama.com/) and [Python](https://www.python.org/downloads/) to be installed
 
-### Installation Guide:
-1. Clone the repository:
+1. Clone the repo:
 ```bash
-git clone https://github.com/diva-in-STEM/local-llm.git
+  git clone https://github.com/diva-in-STEM/ultrabook.git
 ```
 
-2. Create a directory for Chroma
+2. Install required packages:
 ```bash
-cd local-llm
-mkdir chroma_data
+  cd ultrabook
+  pip install -r requirements.txt
 ```
 
-3. Run Chroma with specified directory
-> [!Important]
-> You will need to provide your own Chroma, Ollama and PocketBase installations. Please refer to their documentation for more!
+3. Make the Django database migrations:
 ```bash
-chroma run --path ./chroma_data
+  py manage.py migrate
 ```
 
-4. Pull the default model (I will add an option to change this)
+4. Serve the Django server:
 ```bash
-ollama pull llama3.1:8b
+  py manage.py runserver
 ```
 
-5. Install (see PB docs) and start PocketBase (Windows - for other operating systems, follow PB documentation)
-```bash
-cd 'your-pocketbase-directory'
-./pocketbase.exe serve
-```
+5. Done! 🎉
+## FAQ
 
-6. Create new 'projects' collection - only needed once
-From the PocketBase admin dashboard:
- - Click 'New Collection'
- - Call it 'projects'
- - Add a relation field called owner from the users collection
- - Add a text field called icon
- - Add a text field called title
- - Add a text field called desc
- - Add a text field called conversation
- - Add a text field called model
- - Add a file field called sources
- - Click the 'Single' dropdown and set it to 'Multiple'
+#### Question 1
 
-7. Install project dependencies
-```bash
-# Inside local-llm directory
-npm install
-```
+How do I change the default model?
+> Support for environment variables is coming soon!
 
-8. Start the server!
-```bash
-node index.js
-```
+#### Question 2
 
-### TODO:
-In no particular order:
- - Change default model
- - Add model pulling to web interface
- - Add a way to sign out/change users from home screen
- - Improve site navigation with back button
- - Use environment variable for URLs
- - Add website embedding
- - Add podcast feature
- - Add script to start all services automatically
- - Add install script
- - Docker container!
+Where are the tests?
+> Software test are on the way! I am new to Django so please be patient
+
+
+## Roadmap
+
+- Environment variables to control default values
+
+- Tests
+
+- Add model pulling to selection dropdown
+
+- Website loading & embedding
+
+- Podcast feature
+
+- Scripts to automate starting server
+
+- Create services for Windows, Linux and MacOS to run automatically
+
+- Containerize
