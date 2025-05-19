@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,7 +41,7 @@
                         <label for="file" class="form-label"><strong >Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
                         <div id="dropzone" class="box__input input-group">
                             <input class="box__file form-control" type="file" name="files" id="file" data-multiple-caption="{count} files selected" multiple />
-                            <button class="btn btn-primary" type="submit" id="send"><i class="bi bi-upload"></i></button>
+                            <button class="btn btn-outline-secondary" type="submit" id="send"><i class="bi bi-upload"></i></button>
                         </div>
                     </form>
                 </div>
@@ -54,6 +54,16 @@
                     {{ project.ai_model }}
                 </button>
                 <ul class="dropdown-menu">
+                    <li>
+                        <form action="{% url 'home:get-model' %}" method="post">
+                            {% csrf_token %}
+                            <div class="input-group m-2" id="modelSearchInput">
+                                <input type="text" class="form-control" id="modelSearch" placeholder="llama3.1" name="model">
+                                <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
+                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                            </div>
+                        </form>
+                    </li>
                     {% for model in models %}
                         <li><a href="{% url 'home:switch-model' project_key=project.pk model_name=model|urlencode %}" class="dropdown-item">{{ model }}</a></li>
                     {% endfor %}
@@ -81,7 +91,7 @@
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" name="prompt" id="prompt" placeholder="Enter a prompt" aria-label="Enter a prompt" aria-describedby="send">
                             <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
-                            <button class="btn btn-outline-secondary" type="submit" id="send"><i class="bi bi-send-fill"></i></button>
+                            <button class="btn bg-green" type="submit" id="send"><i class="bi bi-send-fill"></i></button>
                         </div>
                     </form>
                 </div>
