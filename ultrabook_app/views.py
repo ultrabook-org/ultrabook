@@ -264,3 +264,13 @@ def switch_model(request, project_key, model_name):
     selected_project.save()
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
+
+def fetch_model(request):
+    project_key = request.POST["projectID"]
+    selected_project = Project.objects.get(pk=project_key)
+
+    model_name = request.POST["model"]
+    model_name = unquote(model_name)
+    print(model_name)
+
+    return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))

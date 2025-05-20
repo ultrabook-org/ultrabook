@@ -1,9 +1,47 @@
-/* 1. Make html/body fill the viewport */
-html, body {
+:root {
+  --ub-green: #1dbe42;       /* Standard green (Bootstrap's default) */
+  --vivid-ub-green: #1e7e34; /* Saturated green for emphasis */
+  --ub-dark-green: #155724;  /* Darker green for hover/focus */
+  --ub-green-border: #196926; /* Border shade */
+}
+
+html,
+body {
   height: 100%;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+}
+
+.bg-green {
+  background-color: var(--ub-green);
+  border: var(--ub-green-border);
+  transition: 0.25s;
+}
+
+.bg-green:hover {
+  background-color: var(--vivid-ub-green);
+  border: var(--ub-green-border);
+}
+
+.bg-green:focus {
+  background-color: var(--ub-dark-green);
+  color: white;
+  border: var(--ub-green-border);
+}
+
+.bg-green:hover:focus {
+  background-color: var(--ub-dark-green);
+  color: white;
+  border: var(--ub-green-border);
+}
+
+.green {
+  color: var(--ub-green);
+}
+
+.vivid-green {
+  color: var(--vivid-ub-green);
 }
 
 /* 1. Ensure the row is full‐height and never wraps */
@@ -77,4 +115,8 @@ html, body {
 #source-content > form {
   flex: 0 0 auto;       /* no growing or shrinking */
   margin-top: 1rem;     /* optional spacing */
+}
+
+#modelSearchInput {
+  width: 90%;
 }
