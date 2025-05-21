@@ -11,13 +11,63 @@
 </head>
 <body class="body-flex">
     {% load markdown_tags %}
-    <div class="container-fluid m-auto">
-        <div class="row">
+    <div class="container-fluid m-auto h-100">
+        <div class="row border-bottom p-3 mb-3 d-lg-flex flex-row justify-content-between" id="header">
+            <div class="col-md-8 d-flex align-items-center text-white text-decoration-none">
+                <h1 class="m-0 align-middle">{{ project.title }}</h1>
+            </div>
+            <div class="col-md-4 text-end justify-content-end" id="user-container">
+                <a href="/home" class="text-white text-decoration-none p-2">
+                    <i class="bi bi-house-door-fill icon-lg"></i>
+                </a>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#deleteModal" class="text-white text-decoration-none p-2">
+                    <i class="bi bi-trash icon-lg"></i>
+                </a>
+                <div id="deleteModal" class="modal fade" tabindex="-1" aria-labelledby="deletModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="deleteModalLabel">Are you sure?</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body align-items-center justify-content-center">
+                            <p class="text-danger text-center"><strong>Deleting project: "{{ project.title }}" is irreversible!!!</strong></p>
+                        </div>
+                        <div class="modal-footer justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, take me back!</button>
+                            <a type="button" class="btn btn-danger" href="{% url 'home:delete-project' project_key=project.pk %}">Yes, delete</a>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="dropdown p-2">
+                    <a href="#" data-bs-toggle="dropdown" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" aria-expanded="false">
+                        <i class="bi bi-person-circle icon-lg"></i>
+                    </a>
+                    <ul class="dropdown-menu shadow">
+                        <li>
+                            <p class="dropdown-item">
+                                {{ user.username }}
+                            </p>
+                        </li>
+                        <li>
+                            <a href="{% url 'users:logout' %}" class="dropdown-item">
+                                <span class="icon pe-2">
+                                    <i class="bi bi-door-open-fill"></i>
+                                </span>
+                                Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="content">
             <div class="col-3 rounded shadow p-3" id="sources">
                 <h2 >Sources</h2>
                 <p class="opacity-75">Upload new sources or click to remove them</p>
                 <div id="source-content" class="">
-                    <div id="source-list" class="d-flex flex-wrap overflow-scroll h-75">
+                    <div id="source-list" class="d-flex flex-wrap overflow-scroll">
                         <div class="button-list">
                             {% for source in sources %}
                             <a class="btn btn-outline-secondary mb-2" href="{% url 'home:delete-source' project_key=project.pk file_key=source.file_pk %}">
@@ -47,7 +97,8 @@
                 </div>
             </div>
             <div class="col-6 ms-3 rounded shadow p-3" id="chat">
-                <h2 >{{ project.title }}</h2>
+                <h2 >Chat</h2>
+                {% if error_message %}<p><strong class="text-danger">{{ error_message }}</strong></p>{% endif %}
 
                 <div class="dropdown">
                 <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -60,7 +111,7 @@
                             <div class="input-group m-2" id="modelSearchInput">
                                 <input type="text" class="form-control" id="modelSearch" placeholder="llama3.1" name="model">
                                 <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
-                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-download"></i></button>
                             </div>
                         </form>
                     </li>

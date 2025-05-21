@@ -1,5 +1,6 @@
 import requests
 import pathlib
+import subprocess
 from urllib.parse import unquote
 
 from django.http import HttpResponse
@@ -7,6 +8,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.conf import settings
 from django.utils.http import urlsafe_base64_decode
+from django.contrib.auth.decorators import login_required
 from .models import Project, File, Message
 
 from langchain_chroma import Chroma
@@ -38,12 +40,14 @@ def get_models() -> list:
         return []
 
 # Create your views here.
+@login_required
 def home(request):
     user_projects = Project.objects.filter(user=request.user).order_by("-created_at")
     return render(request, "ultrabook_app/home.html", {
         "projects": user_projects
     })
 
+@login_required
 def new_project(request):
     try:
         project = Project(
@@ -99,6 +103,7 @@ def new_project(request):
 
     return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))
 
+@login_required
 def upload_file(request):
     selected_project = Project.objects.get(pk=request.POST["projectID"])
 
@@ -144,12 +149,13 @@ def upload_file(request):
     
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
-def open_project(request, project_key):
+@login_required
+def open_project(request, project_key, **kwargs):
     try:
         selected_project = Project.objects.get(pk=project_key)
         sources = File.objects.filter(project=project_key)
         models = get_models()
-        conversation = Message.objects.filter(project=selected_project).order_by('timestamp')
+        conversation = Message.objects.filter(project=selected_project).order_by('timestamp')[:10]
         source_list = []
 
         for source in sources:
@@ -166,13 +172,15 @@ def open_project(request, project_key):
             "project": selected_project,
             "sources": source_list,
             "models": models,
-            "conversation": conversation
+            "conversation": conversation,
+            "error_message": kwargs.get("error_message", None)
         })
     except Project.DoesNotExist:
         return HttpResponse("Project not found", status=404)
     except Exception as e:
         return HttpResponse(f"Error: {str(e)}", status=500)
 
+@login_required
 def generate(request):
     project_id = request.POST["projectID"]
     user_prompt = request.POST["prompt"]
@@ -228,6 +236,7 @@ def generate(request):
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
+@login_required
 def delete_source(request, project_key, file_key):
     selected_project = Project.objects.get(pk=project_key)
     selected_file = File.objects.get(pk=file_key)
@@ -257,6 +266,7 @@ def delete_source(request, project_key, file_key):
     
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
+@login_required
 def switch_model(request, project_key, model_name):
     selected_project = Project.objects.get(pk=project_key)
     model_name = unquote(model_name)
@@ -265,12 +275,27 @@ def switch_model(request, project_key, model_name):
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
+@login_required
 def fetch_model(request):
     project_key = request.POST["projectID"]
     selected_project = Project.objects.get(pk=project_key)
 
     model_name = request.POST["model"]
     model_name = unquote(model_name)
-    print(model_name)
+    
+    try:
+        subprocess.run(["ollama", "pull", model_name], check=True)
+        selected_project.ai_model = model_name
+        selected_project.save()
+    except subprocess.CalledProcessError as e:
+        error_message = f"Failed to pull model '{model_name}': {e}"
+        return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk, "error_message": error_message}))
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
+
+@login_required
+def delete_project(request, project_key):
+    selected_project = Project.objects.get(pk=project_key)
+    selected_project.delete()
+
+    return redirect("/home")

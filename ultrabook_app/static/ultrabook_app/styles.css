@@ -19,6 +19,7 @@ body {
 .bg-green:hover {
   background-color: var(--vivid-ub-green);
   border: var(--ub-green-border);
+  color: white;
 }
 
 .bg-green:focus {
@@ -43,6 +44,16 @@ body {
 
 .large-icon {
   font-size: 2rem;
+}
+
+#user-container {
+  position: absolute;
+  top: 2.5vh;
+  right: 2.5vh;
+}
+
+.icon-lg {
+  font-size: 1.5rem;
 }
 
 #anchorCard {
