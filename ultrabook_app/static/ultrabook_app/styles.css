@@ -52,6 +52,14 @@ body {
   right: 2.5vh;
 }
 
+#userButton {
+  transition: 0.25s;
+}
+
+#userButton:hover {
+  color: #0d6efd
+}
+
 .icon-lg {
   font-size: 1.5rem;
 }

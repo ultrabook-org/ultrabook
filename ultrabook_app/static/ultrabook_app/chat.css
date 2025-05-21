@@ -73,6 +73,22 @@ body {
   align-items: center;
 }
 
+#deleteButton, #homeButton, #userButton {
+  transition: 0.25s;
+}
+
+#deleteButton:hover {
+  color: #dc3545;
+}
+
+#homeButton:hover {
+  color: var(--ub-green);
+}
+
+#userButton:hover {
+  color: #0d6efd
+}
+
 .icon-lg {
     font-size: 1.5rem;
 }
