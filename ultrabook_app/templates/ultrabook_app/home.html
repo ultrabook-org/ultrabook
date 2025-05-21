@@ -11,6 +11,28 @@
 </head>
 <body class="d-flex align-items-center py-4 bg-body-tertiary">
     <main class="w-75 m-auto">
+        <div class="text-end justify-content-end" id="user-container">
+            <div class="dropdown p-2">
+                <a href="#" data-bs-toggle="dropdown" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" aria-expanded="false">
+                    <i class="bi bi-person-circle icon-lg"></i>
+                </a>
+                <ul class="dropdown-menu shadow">
+                    <li>
+                        <p class="dropdown-item">
+                            {{ user.username }}
+                        </p>
+                    </li>
+                    <li>
+                        <a href="{% url 'users:logout' %}" class="dropdown-item">
+                            <span class="icon pe-2">
+                                <i class="bi bi-door-open-fill"></i>
+                            </span>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
         <div id="header">
             <h1 class="title" id="heading">Welcome to ultrabook {% if user.is_authenticated %} {{ user.username }}! {% endif %}</h1>
             {% if projects|length > 0 %}

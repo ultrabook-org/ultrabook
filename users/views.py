@@ -1,8 +1,7 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.urls import reverse
-
 
 def loginPage(request):
     if request.method == 'GET':
@@ -35,3 +34,8 @@ def signUp(request):
             return render(request, "users/sign-up.html", {
                 "error_message": "Passwords do not match"
             })
+        
+def sign_out(request):
+    if request.user.is_authenticated:
+        logout(request)
+        return redirect(reverse("users:login"))
