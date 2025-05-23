@@ -1,6 +1,7 @@
 import requests
 import pathlib
 import subprocess
+import json
 from urllib.parse import unquote
 
 from django.http import HttpResponse
@@ -9,6 +10,8 @@ from django.urls import reverse
 from django.conf import settings
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.decorators import login_required
+from django.http import StreamingHttpResponse, JsonResponse
+from django.utils.safestring import mark_safe
 from .models import Project, File, Message
 
 from langchain_chroma import Chroma
@@ -179,62 +182,46 @@ def open_project(request, project_key, **kwargs):
         return HttpResponse("Project not found", status=404)
     except Exception as e:
         return HttpResponse(f"Error: {str(e)}", status=500)
-
-@login_required
-def generate(request):
-    project_id = request.POST["projectID"]
-    user_prompt = request.POST["prompt"]
     
+@login_required
+def generate_stream(request):
+    project_id = request.POST['projectID']
+    user_prompt = request.POST['prompt']
     selected_project = Project.objects.get(pk=project_id)
 
+    # Prepare vector store & chain
     vector_store = Chroma(
-        collection_name=selected_project.title.replace(" ", "-"),
+        collection_name=selected_project.title.replace(' ', '-'),
         embedding_function=embedder,
-        persist_directory="./chroma_langchain_db", 
+        persist_directory='./chroma_langchain_db',
     )
-
-    question_answering_prompt = ChatPromptTemplate.from_messages([
-        (
-            "system",
-            "You are provided multiple context items that are related to the prompt you have to answer. Use the following pieces of context to respond to the prompt at the end.\n\n{context}\n",
-        ),
-        ("human", "{input}"),
+    prompt_template = ChatPromptTemplate.from_messages([
+        ('system', 'Use the context to answer:\n\n{context}\n'),
+        ('human', '{input}'),
     ])
-
     llm = ChatOllama(model=selected_project.ai_model)
-    combine_docs_chain = create_stuff_documents_chain(
-        llm=llm,
-        prompt=question_answering_prompt
-    )
-
+    combine_chain = create_stuff_documents_chain(llm=llm, prompt=prompt_template)
     retriever = vector_store.as_retriever()
+    chain = create_retrieval_chain(retriever, combine_chain)
 
-    chain = create_retrieval_chain(
-        retriever,
-        combine_docs_chain
-    )
-
-    response = chain.invoke({"input": user_prompt})
-    answer = response["answer"]
-    if (answer.find("</think>") != -1):
-        answer = answer.split("</think>\n")[-1]
-
-    user_message = Message(
+    # Save user message immediately
+    usr_msg = Message.objects.create(
         project=selected_project,
         content=user_prompt,
         is_user=True,
     )
+    usr_msg.save()
 
-    sys_message = Message(
-        project=selected_project,
-        content=answer,
-        is_user=False,
+    def stream_generator():
+        for chunk in chain.stream({'input': user_prompt}):
+            text = chunk.get('answer', '')
+            if text:
+                yield f"data: {json.dumps({'chunk': text})}\n\n"
+
+    return StreamingHttpResponse(
+        stream_generator(),
+        content_type='text/event-stream'
     )
-
-    user_message.save()
-    sys_message.save()
-
-    return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
 @login_required
 def delete_source(request, project_key, file_key):
@@ -299,3 +286,31 @@ def delete_project(request, project_key):
     selected_project.delete()
 
     return redirect("/home")
+
+@login_required
+def save_message(request):
+    if request.method == 'POST':
+        # Extract the project ID and message from the POST data
+        project_id = request.POST.get('project_id')
+        system_message = request.POST.get('message')
+        is_user = request.POST.get('is_user', 'false') == 'true'
+
+        if not project_id or not system_message:
+            return JsonResponse({'error': 'Missing project_id or message'}, status=400)
+
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return JsonResponse({'error': 'Project not found'}, status=404)
+
+        # Save the system message
+        msg = Message.objects.create(
+            project=project,
+            content=system_message,
+            is_user=is_user,
+        )
+
+        msg.save()
+
+        return redirect(reverse('home:open-project', kwargs={"project_key": project_id}))
+

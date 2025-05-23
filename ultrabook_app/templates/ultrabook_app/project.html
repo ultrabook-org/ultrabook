@@ -88,8 +88,8 @@
                     <form class="mt-3 p-3" action="{% url 'home:upload-file' %}" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
-                        <label for="file" class="form-label"><strong >Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
                         <div id="dropzone" class="box__input input-group">
+                            <label for="file" class="form-label"><strong >Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
                             <input class="box__file form-control" type="file" name="files" id="file" data-multiple-caption="{count} files selected" multiple />
                             <button class="btn btn-outline-secondary" type="submit" id="send"><i class="bi bi-upload"></i></button>
                         </div>
@@ -137,7 +137,7 @@
                         {% endfor %}
                     </div>
 
-                    <form action="{% url 'home:gen' %}" method="post" class="w-100">
+                    <form action="{% url 'home:gen' %}" method="post" class="w-100 chat-form">
                         {% csrf_token %}
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" name="prompt" id="prompt" placeholder="Enter a prompt" aria-label="Enter a prompt" aria-describedby="send">
@@ -182,6 +182,82 @@
             let cookie = document.cookie.split(';').find(row => row.trim().startsWith(name + '='));
             return cookie ? cookie.substring(name.length + 1, cookie.length).trim() : '';
         }
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form.chat-form');
+            const conversation = document.getElementById('conversation');
+            const promptInput = form.querySelector('input[name="prompt"]');
+            const sendButton = form.querySelector('button[type="submit"]');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                // Disable send button to prevent multiple submissions
+                sendButton.disabled = true;
+                // Capture prompt and clear input
+                const formData = new FormData(form);
+                const userText = promptInput.value;
+                promptInput.value = '';
+
+                const response = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                body: formData,
+                });
+
+                // Append user message immediately
+                const userMsg = document.createElement('div');
+                userMsg.classList.add('d-flex', 'align-items-start', 'mb-3');
+                userMsg.innerHTML = `<i class="bi bi-person-fill"></i><div class="message ms-3"></div>`;
+                userMsg.querySelector('.message').textContent = userText;
+                conversation.appendChild(userMsg);
+
+                // Prepare a new bot message container
+                const botMsg = document.createElement('div');
+                botMsg.classList.add('d-flex', 'align-items-start', 'mb-3');
+                botMsg.innerHTML = `<i class="bi bi-robot"></i><div class="message ms-3"></div>`;
+                const contentDiv = botMsg.querySelector('.message');
+                conversation.appendChild(botMsg);
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let done = false;
+
+                while (!done) {
+                const { value, done: readerDone } = await reader.read();
+                done = readerDone;
+                const chunkText = decoder.decode(value);
+                chunkText.split(/\n\n/).forEach(event => {
+                    if (event.startsWith('data:')) {
+                    const { chunk } = JSON.parse(event.replace(/^data: /, ''));
+                    contentDiv.textContent += chunk;
+                    conversation.scrollTop = conversation.scrollHeight;
+                    }
+                });
+                }
+
+                // Re-enable send button after streaming complete
+                sendButton.disabled = false;
+                const systemMessageText = contentDiv.textContent;
+                const systemMessageFormData = new FormData();
+                systemMessageFormData.append('message', systemMessageText);
+                systemMessageFormData.append('is_user', 'false'); // Adjust based on your backend logic
+                systemMessageFormData.append("project_id", '{{ project.pk }}')
+
+                fetch("{% url 'home:save-system-message' %}", {  // Ensure this endpoint exists on your server
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: systemMessageFormData,
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('System message saved:', data);
+                })
+                .catch(error => {
+                    console.error('Error saving system message:', error);
+                });
+            });
+        });
     </script>
 </body>
 </html>
