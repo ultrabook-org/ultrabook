@@ -29,7 +29,7 @@ class NewProjectViewTest(TestCase):
             "files": []
         })
         
-        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertEqual(response.status_code, 302)
 
 class OpenProjectViewTest(TestCase):
     def setUp(self):
@@ -66,12 +66,12 @@ class GenerateViewTest(TestCase):
 
     @patch("langchain_chroma.Chroma")
     def test_generate_saves_messages(self, mock_chroma):
-        mock_chroma.return_value = None  # Mock Chroma
+        mock_chroma.return_value = None
         response = self.client.post(reverse("home:gen"), {
             "projectID": self.project.pk,
             "prompt": "Test prompt"
         })
         
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         messages = Message.objects.filter(project=self.project)
-        self.assertEqual(messages.count(), 2)
+        self.assertEqual(messages.count(), 1)

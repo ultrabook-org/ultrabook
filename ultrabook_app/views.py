@@ -2,6 +2,7 @@ import requests
 import pathlib
 import subprocess
 import json
+import threading
 from urllib.parse import unquote
 
 from django.http import HttpResponse
@@ -23,6 +24,7 @@ from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
+from langchain_community.document_loaders import SeleniumURLLoader
 
 embedder = OllamaEmbeddings(model="snowflake-arctic-embed2")
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0)
@@ -42,6 +44,70 @@ def get_models() -> list:
         # Optionally log or handle errors
         return []
 
+def process_files(files, vector_store, project):
+    threads = []
+    for file in files:
+        thread = threading.Thread(target=_process_file, args=(file, vector_store, project))
+        threads.append(thread)
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+def _process_file(file, vector_store, project):
+    file_instance = File(project=project, file=file)
+    file_instance.save()
+
+    if file_instance.file.name.endswith(('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.csv')):
+        loader = DoclingLoader(
+            file_path=file_instance.file.path,
+            export_type=ExportType.DOC_CHUNKS
+        )
+    else:
+        loader = None
+
+    documents = loader.load() if loader else []
+    filtered_documents = []
+    for doc in documents:
+        filtered_documents.append(
+            Document(
+                page_content=doc.page_content,
+                id=doc.id,
+                metadata={"source": file_instance.file.name}
+            )
+        )
+
+    splits = text_splitter.split_documents(filtered_documents)
+    vector_store.add_documents(splits)
+
+def process_urls(urls, vector_store, project):
+    threads = []
+    for url in urls:
+        thread = threading.Thread(target=_process_url, args=(url, vector_store, project))
+        threads.append(thread)
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+def _process_url(url, vector_store, project):
+    url_file_instance = File(project=project, url=url)
+    url_file_instance.save()
+
+    loader = SeleniumURLLoader(urls=[url])
+    documents = loader.load()
+
+    filtered_documents = []
+    for doc in documents:
+        filtered_documents.append(
+            Document(
+                page_content=doc.page_content,
+                id=doc.id,
+                metadata={"source": url}
+            )
+        )
+
+    splits = text_splitter.split_documents(filtered_documents)
+    vector_store.add_documents(splits)
+
 # Create your views here.
 @login_required
 def home(request):
@@ -54,55 +120,26 @@ def home(request):
 def new_project(request):
     try:
         project = Project(
-            user=request.user, 
-            title=request.POST["title"], 
-            desc=request.POST["desc"], 
+            user=request.user,
+            title=request.POST["title"],
+            desc=request.POST["desc"],
             ai_model="qwen3:8b"
         )
-
         project.save()
     except Exception as e:
         print(f"Failed to create project: {e}")
 
-    files = request.FILES.getlist('files')
     vector_store = Chroma(
         collection_name=request.POST["title"].replace(" ", "-"),
         embedding_function=embedder,
-        persist_directory="./chroma_langchain_db",  # Where to save data locally, remove if not necessary
+        persist_directory="./chroma_langchain_db",
     )
 
-    if files:
-        for file in files:
-            # Save file metadata
-            file_instance = File(project=project, file=file)
-            file_instance.save()
+    files = request.FILES.getlist('files')
+    urls = request.POST['urls'].split(',')
 
-            # Determine file type and load content
-            docling_files = ('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.html', '.csv')
-            if file.name.endswith(docling_files):
-                loader = DoclingLoader(
-                    file_path=file_instance.file.path,
-                    export_type=ExportType.DOC_CHUNKS
-                )
-            else:
-                loader = None 
-
-            documents = loader.load() if loader else []
-
-            filtered_documents = []
-            for doc in documents:
-                filtered_documents.append(
-                    Document(
-                        page_content=doc.page_content,
-                        id=doc.id,
-                        metadata={"source": file_instance.file.name}
-                    )
-                )
-
-            splits = text_splitter.split_documents(filtered_documents)
-
-            # Add embeddings to Chroma
-            vector_store.add_documents(splits)
+    process_files(files, vector_store, project)
+    process_urls(urls, vector_store, project=project)
 
     return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))
 
@@ -110,46 +147,18 @@ def new_project(request):
 def upload_file(request):
     selected_project = Project.objects.get(pk=request.POST["projectID"])
 
-    files = request.FILES.getlist('files')
     vector_store = Chroma(
         collection_name=selected_project.title.replace(" ", "-"),
         embedding_function=embedder,
-        persist_directory="./chroma_langchain_db",  # Where to save data locally, remove if not necessary
+        persist_directory="./chroma_langchain_db",
     )
 
-    if files:
-        for file in files:
-            # Save file metadata
-            file_instance = File(project=selected_project, file=file)
-            file_instance.save()
+    files = request.FILES.getlist('files')
+    urls = request.POST['urls'].split(',')
 
-            # Determine file type and load content
-            docling_files = ('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.html', '.csv')
-            if file.name.endswith(docling_files):
-                loader = DoclingLoader(
-                    file_path=file_instance.file.path,
-                    export_type=ExportType.DOC_CHUNKS
-                )
-            else:
-                loader = None 
+    process_files(files, vector_store, selected_project)
+    process_urls(urls, vector_store, selected_project)
 
-            documents = loader.load() if loader else []
-
-            filtered_documents = []
-            for doc in documents:
-                filtered_documents.append(
-                    Document(
-                        page_content=doc.page_content,
-                        id=doc.id,
-                        metadata={"source": file_instance.file.name}
-                    )
-                )
-
-            splits = text_splitter.split_documents(filtered_documents)
-
-            # Add embeddings to Chroma
-            vector_store.add_documents(splits)
-    
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
 @login_required
@@ -162,7 +171,7 @@ def open_project(request, project_key, **kwargs):
         source_list = []
 
         for source in sources:
-            processed_name = source.file.name.replace("project_files/", '')
+            processed_name = source.file.name.replace("project_files/", '') if source.file else source.url
             processed_name = processed_name.replace("_", " ")
             source_list.append({
                 'file': source.file,
@@ -238,18 +247,28 @@ def delete_source(request, project_key, file_key):
     ids_to_delete = []
     deletion_docs = vector_store.get(include=["metadatas"])
 
-    for idx, metadata in enumerate(deletion_docs["metadatas"]):
-        if metadata.get("source") == selected_file.file.name:
-            ids_to_delete.append(deletion_docs["ids"][idx])
+    if selected_file.file:
+        for idx, metadata in enumerate(deletion_docs["metadatas"]):
+            if metadata.get("source") == selected_file.file.name:
+                ids_to_delete.append(deletion_docs["ids"][idx])
 
-    if ids_to_delete:
-        vector_store.delete(ids_to_delete)
-    
-    # Delete file record
-    selected_file.delete()
+        if ids_to_delete:
+            vector_store.delete(ids_to_delete)
+        
+        # Delete file record
+        selected_file.delete()
 
-    # Delete the file from the file system
-    pathlib.Path.unlink(selected_file.file.path)
+        # Delete the file from the file system
+        pathlib.Path.unlink(selected_file.file.path)
+    else:
+        for idx, metadata in enumerate(deletion_docs["metadatas"]):
+            if metadata.get("source") == selected_file.url:
+                ids_to_delete.append(deletion_docs["ids"][idx])
+
+        if ids_to_delete:
+            vector_store.delete(ids_to_delete)
+
+        selected_file.delete()        
     
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
@@ -313,4 +332,7 @@ def save_message(request):
         msg.save()
 
         return redirect(reverse('home:open-project', kwargs={"project_key": project_id}))
+    
+    else:
+        return redirect('home/')
 

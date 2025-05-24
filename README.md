@@ -54,11 +54,11 @@ Where are the tests?
 
 - Environment variables to control default values
 
-- Tests
+- ~~Tests~~
 
-- Add model pulling to selection dropdown
+- ~~Add model pulling to selection dropdown~~
 
-- Website loading & embedding
+- ~~Website loading & embedding~~
 
 - Podcast feature
 

@@ -17,6 +17,7 @@ class File(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     file = models.FileField(upload_to='project_files/')
     uploaded_at = models.DateTimeField(db_default=Now())
+    url = models.TextField()
 
     def __str__(self):
         return f"File {self.file.name} for {self.project.title}"
