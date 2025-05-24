@@ -313,4 +313,7 @@ def save_message(request):
         msg.save()
 
         return redirect(reverse('home:open-project', kwargs={"project_key": project_id}))
+    
+    else:
+        return redirect('home/')
 
