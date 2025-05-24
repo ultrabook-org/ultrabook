@@ -139,7 +139,10 @@ def new_project(request):
     urls = request.POST['urls'].split(',')
 
     process_files(files, vector_store, project)
-    process_urls(urls, vector_store, project=project)
+
+    if len(urls) > 0:
+        print(len(urls))
+        process_urls(urls.split(','), vector_store, project)
 
     return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))
 
@@ -154,10 +157,13 @@ def upload_file(request):
     )
 
     files = request.FILES.getlist('files')
-    urls = request.POST['urls'].split(',')
+    urls = request.POST['urls']
 
     process_files(files, vector_store, selected_project)
-    process_urls(urls, vector_store, selected_project)
+    
+    if len(urls) > 0:
+        print(len(urls))
+        process_urls(urls.split(','), vector_store, selected_project)
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 

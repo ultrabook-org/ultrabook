@@ -73,10 +73,10 @@
                             <a class="btn btn-outline-secondary mb-2" href="{% url 'home:delete-source' project_key=project.pk file_key=source.file_pk %}">
                                 {% if source.extension == "pdf" %}
                                     <i class="bi bi-file-earmark-pdf-fill"></i>
-                                {% elif source.extension == "doc" %}
+                                {% elif source.extension == "doc" or source.extension == "docx" %}
                                     <i class="bi bi-file-earmark-doc-fill"></i>
-                                {% elif source.extension == "docx" %}
-                                    <i class="bi bi-file-earmark-docx-fill"></i>
+                                {% elif source.extension == "pptx" %}
+                                    <i class="bi bi-file-earmark-easel-fill"></i>
                                 {% else %}
                                     <i class="bi bi-file-earmark-text-fill"></i>
                                 {% endif %}
@@ -88,8 +88,9 @@
                     <form class="mt-3 p-3" action="{% url 'home:upload-file' %}" method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
+                        <input type="hidden" name="urls" id="urls" value="">
+                        <label for="file" class="form-label" id="fielLabel"><strong >Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
                         <div id="dropzone" class="box__input input-group">
-                            <label for="file" class="form-label"><strong >Choose files</strong><span class="box__dragndrop"> or drag them here</span></label>
                             <input class="box__file form-control" type="file" name="files" id="file" data-multiple-caption="{count} files selected" multiple />
                             <button class="btn btn-outline-secondary" type="submit" id="send"><i class="bi bi-upload"></i></button>
                         </div>
