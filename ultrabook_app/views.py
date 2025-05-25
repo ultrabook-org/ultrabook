@@ -136,12 +136,11 @@ def new_project(request):
     )
 
     files = request.FILES.getlist('files')
-    urls = request.POST['urls'].split(',')
+    urls = request.POST['urls']
 
     process_files(files, vector_store, project)
 
     if len(urls) > 0:
-        print(len(urls))
         process_urls(urls.split(','), vector_store, project)
 
     return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))
@@ -173,7 +172,7 @@ def open_project(request, project_key, **kwargs):
         selected_project = Project.objects.get(pk=project_key)
         sources = File.objects.filter(project=project_key)
         models = get_models()
-        conversation = Message.objects.filter(project=selected_project).order_by('timestamp')[:10]
+        conversation = Message.objects.filter(project=selected_project).order_by('timestamp')
         source_list = []
 
         for source in sources:

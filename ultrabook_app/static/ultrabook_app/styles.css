@@ -82,11 +82,22 @@ body {
 
 #file-upload {
   display: flex;
-  justify-content: center;
+  justify-content: space-around;
   align-items: center;
-  border: 2px dashed #6c757d;
 }
 
-.card:hover i {
+.card:hover * {
+  color: white;
+}
+
+.badge {
+  background-color: var(--ub-green);
+  color: black;
+  margin-top: 5px;
+  margin-right: 5px;
+}
+
+.badge:hover {
+  cursor: pointer;
   color: white;
 }
