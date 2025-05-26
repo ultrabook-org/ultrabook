@@ -9,7 +9,7 @@ register = template.Library()
 @register.filter
 def markdownify(text):
     # Convert markdown to HTML
-    html = markdown.markdown(text)
+    html = markdown.markdown(text, extensions=['fenced_code'])
     
     # Sanitize HTML to prevent XSS
     # Allow all standard HTML tags and attributes
