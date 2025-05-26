@@ -55,7 +55,7 @@ def _process_file(file, vector_store, project):
     file_instance = File(project=project, file=file)
     file_instance.save()
 
-    if file_instance.file.name.endswith(('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.csv')):
+    if file_instance.file.name.endswith(('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.csv', '.png', '.jpeg', '.tiff', '.bmp', '.webp')):
         loader = DoclingLoader(
             file_path=file_instance.file.path,
             export_type=ExportType.DOC_CHUNKS
@@ -136,10 +136,18 @@ def new_project(request):
     files = request.FILES.getlist('files')
     urls = request.POST['urls']
 
-    process_files(files, vector_store, project)
+    thread1 = threading.Thread(target=process_files, args=(files, vector_store, project))
+    thread1.start()
 
-    if len(urls) > 0:
-        process_urls(urls.split(','), vector_store, project)
+    thread2 = None
+    if urls:
+        thread2 = threading.Thread(target=process_urls, args=(urls.split(','), vector_store, project))
+        thread2.start()
+
+    # Wait for both threads to complete
+    thread1.join()
+    if urls:
+        thread2.join()
 
     return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))
 
@@ -156,10 +164,18 @@ def upload_file(request):
     files = request.FILES.getlist('files')
     urls = request.POST['urls']
 
-    process_files(files, vector_store, selected_project)
-    
-    if len(urls) > 0:
-        process_urls(urls.split(','), vector_store, selected_project)
+    thread1 = threading.Thread(target=process_files, args=(files, vector_store, selected_project))
+    thread1.start()
+
+    thread2 = None
+    if urls:
+        thread2 = threading.Thread(target=process_urls, args=(urls.split(','), vector_store, selected_project))
+        thread2.start()
+
+    # Wait for both threads to complete
+    thread1.join()
+    if urls:
+        thread2.join()
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
 
@@ -175,11 +191,13 @@ def open_project(request, project_key, **kwargs):
         for source in sources:
             processed_name = source.file.name.replace("project_files/", '') if source.file else source.url
             processed_name = processed_name.replace("_", " ")
+            is_url = True if source.url else False
             source_list.append({
                 'file': source.file,
                 'processed_name': processed_name,
                 'extension': processed_name.split(".")[-1],
-                "file_pk": source.pk
+                "file_pk": source.pk,
+                "is_url": is_url
             })
 
         return render(request, "ultrabook_app/project.html", {

@@ -1,3 +1,19 @@
+function validateFile() {
+    const files = document.getElementById("file").files;
+    const allowedExtensions = [".pdf", ".docx", ".xlsx", ".pptx", ".md", ".html", ".csv", ".png", ".jpeg", ".tiff", ".bmp", ".webp"];
+
+    // Check if the file extension is allowed
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      const fileName = file.name.toLowerCase();
+      const isValid = allowedExtensions.some(ext => fileName.endsWith(ext));
+      if (!isValid) {
+          alert("Invalid file type. Only the following formats are allowed: " + allowedExtensions.join(", ") + ".");
+          document.getElementById("file").value = ""; // Clear the file input
+      }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file');
