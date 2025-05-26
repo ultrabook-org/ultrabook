@@ -8,20 +8,17 @@ from urllib.parse import unquote
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
-from django.conf import settings
-from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse, JsonResponse
-from django.utils.safestring import mark_safe
 from .models import Project, File, Message
 
 from langchain_chroma import Chroma
-from langchain_ollama import OllamaEmbeddings, ChatOllama, OllamaLLM
+from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_docling import DoclingLoader
 from langchain_docling.loader import ExportType
 from langchain_core.documents import Document
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_community.document_loaders import SeleniumURLLoader
@@ -210,6 +207,7 @@ def generate_stream(request):
         persist_directory='./chroma_langchain_db',
     )
     prompt_template = ChatPromptTemplate.from_messages([
+        MessagesPlaceholder(variable_name="chat_history"),
         ('system', 'Use the context to answer:\n\n{context}\n'),
         ('human', '{input}'),
     ])
@@ -226,8 +224,20 @@ def generate_stream(request):
     )
     usr_msg.save()
 
+    messages = Message.objects.filter(project=selected_project).values('content', 'is_user')
+    chat_history = chat_history = [
+        {
+            'content': msg['content'],
+            'role': 'human' if msg['is_user'] else 'ai'
+        }
+        for msg in messages
+    ]
+
     def stream_generator():
-        for chunk in chain.stream({'input': user_prompt}):
+        for chunk in chain.stream({
+            'input': user_prompt,
+            'chat_history': chat_history
+        }):
             text = chunk.get('answer', '')
             if text:
                 yield f"data: {json.dumps({'chunk': text})}\n\n"
