@@ -55,7 +55,7 @@ def _process_file(file, vector_store, project):
     file_instance = File(project=project, file=file)
     file_instance.save()
 
-    if file_instance.file.name.endswith(('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.csv')):
+    if file_instance.file.name.endswith(('.pdf', '.docx', '.xlsx', '.pptx', '.md', '.html', '.csv', '.png', '.jpeg', '.tiff', '.bmp', '.webp')):
         loader = DoclingLoader(
             file_path=file_instance.file.path,
             export_type=ExportType.DOC_CHUNKS
