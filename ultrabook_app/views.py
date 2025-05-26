@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse, JsonResponse
+from django.views.decorators.cache import never_cache
 from .models import Project, File, Message
 
 from langchain_chroma import Chroma
@@ -158,7 +159,6 @@ def upload_file(request):
     process_files(files, vector_store, selected_project)
     
     if len(urls) > 0:
-        print(len(urls))
         process_urls(urls.split(','), vector_store, selected_project)
 
     return redirect(reverse('home:open-project', kwargs={"project_key": selected_project.pk}))
@@ -222,6 +222,7 @@ def generate_stream(request):
         content=user_prompt,
         is_user=True,
     )
+    
     usr_msg.save()
 
     messages = Message.objects.filter(project=selected_project).values('content', 'is_user')
@@ -242,10 +243,14 @@ def generate_stream(request):
             if text:
                 yield f"data: {json.dumps({'chunk': text})}\n\n"
 
-    return StreamingHttpResponse(
+    response = StreamingHttpResponse(
         stream_generator(),
         content_type='text/event-stream'
     )
+
+    response['Cache-Control'] = 'no-cache'
+    return response
+
 
 @login_required
 def delete_source(request, project_key, file_key):

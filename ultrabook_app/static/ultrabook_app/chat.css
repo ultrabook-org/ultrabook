@@ -170,3 +170,17 @@ body {
   cursor: pointer;
   color: white;
 }
+
+pre {
+  background: #161e25;
+  border-left: 3px solid var(--ub-green);
+  page-break-inside: avoid;
+  font-family: monospace;
+  line-height: 1.6;
+  margin-bottom: 1.6em;
+  max-width: 100%;
+  overflow: auto;
+  padding: 1em 1.5em;
+  display: block;
+  word-wrap: break-word;
+}
