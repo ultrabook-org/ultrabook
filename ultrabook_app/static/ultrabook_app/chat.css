@@ -93,78 +93,80 @@ body {
     font-size: 1.5rem;
 }
 
-/* 1. Ensure the row is full‐height and never wraps */
 .container-fluid > .row {
-  flex-wrap: nowrap;      /* don't allow columns to wrap down */
+  flex-wrap: nowrap;
 }
 
-/* 2. Let every .col grow/shrink equally */
 .col, .col-md-6 {
   display: flex;
   flex-direction: column;
-  flex: 1 1 0;            /* all columns take equal share of width */
-  min-width: 0;           /* allow inner scrolls to work */
+  flex: 1 1 0;
+  min-width: 0;
   overflow: hidden;
 }
 
-/* 1) Make the chat column a flex‐column container */
 #chat {
   display: flex;
   flex-direction: column;
-  height: 100%;       /* full viewport height */
-  overflow: hidden;      /* nothing spills out */
-  margin-left: .75rem;   /* your ms-3 equivalent */
+  height: 100%;
+  overflow: hidden;
+  margin-left: .75rem;
 }
 
-/* 2) Drop the “full-height” hack and instead flex the inner wrapper */
 .chat-features {
-  flex: 1 1 auto;        /* fill the column vertically */
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-/* 3) The conversation area grows/scrolls */
 #conversation {
   flex: 1 1 auto;
   overflow-y: auto;
-  margin-bottom: .5rem;  /* give space before the form */
-  padding-right: .5rem;  /* optional, avoid hidden text under scrollbar */
+  margin-bottom: .5rem;
+  padding-right: .5rem;
 }
 
-/* 4) Pin the form at the bottom */
 .chat-features > form {
   flex: 0 0 auto;
 }
 
-/* 1) Turn the whole Sources column into a columnar flex box */
 #sources {
   display: flex;
   flex-direction: column;
-  height: 100%;      /* full viewport height */
-  overflow: hidden;     /* no spilling */
+  height: 100%;
+  overflow: hidden;
 }
 
-/* 2) Inside it, make the source‑list + form wrapper flex */
 #source-content {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;       /* fills all available height between header and bottom */
-  overflow: hidden;     /* hide any overflow on the wrapper itself */
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
-/* 3) Let the actual list scroll */
 #source-list {
-  flex: 1 1 auto;       /* grow to fill up #source-content */
-  overflow-y: auto;     /* scroll if too many items */
+  flex: 1 1 auto;
+  overflow-y: auto;
 }
 
-/* 4) Pin the form at the bottom of #source-content */
 #source-content > form {
-  flex: 0 0 auto;       /* no growing or shrinking */
-  margin-top: 1rem;     /* optional spacing */
+  flex: 0 0 auto;
+  margin-top: 1rem;
 }
 
 #modelSearchInput {
   width: 90%;
+}
+
+.badge {
+  background-color: var(--ub-green);
+  color: black;
+  margin-top: 5px;
+  margin-right: 5px;
+}
+
+.badge:hover {
+  cursor: pointer;
+  color: white;
 }

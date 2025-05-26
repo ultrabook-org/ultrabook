@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('file');
-    const label = dropzone.querySelector('label');
+    const label = document.getElementById('fileLabel');
     const origLabel = label.innerHTML;
   
     function updateLabelWithFiles(files) {
