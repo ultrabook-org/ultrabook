@@ -27,9 +27,14 @@ def signUp(request):
         confPassword = request.POST["confirmPassword"]
 
         if password == confPassword:
-            user = User.objects.create_user(username=username, password=password)
-            login(request, user)
-            return redirect(reverse('home:home'))
+            try:
+                user = User.objects.create_user(username=username, password=password)
+                login(request, user)
+                return redirect(reverse('home:home'))
+            except:
+                return render(request, "users/sign-up.html", {
+                    "error_message": "Error creating account"
+                })
         else:
             return render(request, "users/sign-up.html", {
                 "error_message": "Passwords do not match"

@@ -9,13 +9,13 @@
     <link rel="stylesheet" href="{% static 'ultrabook_app/chat.css' %}">
     <title>{{ project.title }}</title>
 </head>
-<body class="body-flex">
+<body class="body-flex bg-body">
     {% load markdown_tags %}
     {% load thoughts %}
     <div class="container-fluid m-auto h-100">
         <div class="row border-bottom p-3 mb-3 d-lg-flex flex-row justify-content-between" id="header">
             <div class="col-md-8 d-flex align-items-center text-white text-decoration-none">
-                <h1 class="m-0 align-middle">{{ project.title }}</h1>
+                <h1 class="m-0 align-middle fs-4 text-truncate">{{ project.title }}</h1>
             </div>
             <div class="col-md-4 text-end justify-content-end" id="user-container">
                 <a href="/home" class="text-white text-decoration-none p-2">
@@ -65,9 +65,9 @@
         </div>
         <div class="row" id="content">
             <div class="col-3 rounded shadow p-3" id="sources">
-                <h2 >Sources</h2>
+                <h2 class="fw-semibold">Sources</h2>
                 <p class="opacity-75">Upload new sources or click to remove them</p>
-                <button id="upload-sources-btn" class="btn btn-primary btn-lg bg-green mb-3" data-bs-toggle="modal" data-bs-target="#uploadSourcesForm"><i class="bi bi-upload"></i> Upload Sources</button>
+                <button id="upload-sources-btn" class="btn btn-lg btn-light magic-border mb-3" data-bs-toggle="modal" data-bs-target="#uploadSourcesForm"><i class="bi bi-upload"></i> Upload Sources</button>
                 <div id="uploadSourcesForm" class="modal fade" tabindex="-1" aria-labelledby="uploadSourcesForm">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content rounded-4 shadow">
@@ -96,29 +96,31 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary bg-green" data-bs-dismiss="modal">Upload Sources</button>
+                                    <button type="submit" class="btn btn-light magic-border" data-bs-dismiss="modal">Upload Sources</button>
                                 </div>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div id="source-content" class="">
-                    <div id="source-list" class="d-flex flex-wrap overflow-scroll">
-                        <div class="button-list">
+                    <div id="source-list" class="overflow-scroll">
+                        <div class="d-flex flex-wrap">
                             {% for source in sources %}
-                            <a class="btn btn-outline-secondary mb-2" href="{% url 'home:delete-source' project_key=project.pk file_key=source.file_pk %}">
+                            <a class="badge rounded-pill text-bg-light m-1" href="{% url 'home:delete-source' project_key=project.pk file_key=source.file_pk %}" role="button">
                                 {% if source.extension == "pdf" %}
-                                    <i class="bi bi-file-earmark-pdf-fill text-danger"></i>
+                                    <i class="bi bi-file-earmark-pdf-fill"></i>
                                 {% elif source.extension == "doc" or source.extension == "docx" %}
-                                    <i class="bi bi-file-earmark-word-fill text-primary"></i>
+                                    <i class="bi bi-file-earmark-word-fill"></i>
                                 {% elif source.extension == "pptx" %}
-                                    <i class="bi bi-file-earmark-easel-fill text-warning"></i>
+                                    <i class="bi bi-file-earmark-easel-fill"></i>
                                 {% elif source.is_url %}
-                                    <i class="bi bi-globe2 text-success"></i>
+                                    <i class="bi bi-globe2"></i>
                                 {% else %}
                                     <i class="bi bi-file-earmark-text-fill"></i>
                                 {% endif %}
-                                {{ source.processed_name }}
+                                <span class="d-inline-block text-truncate" style="max-width: 100px;">
+                                    {{ source.processed_name }}
+                                </span>
                             </a>
                             {% endfor %}
                         </div>
@@ -126,7 +128,7 @@
                 </div>
             </div>
             <div class="col-6 ms-3 rounded shadow p-3" id="chat">
-                <h2 >Chat</h2>
+                <h2 class="fw-semibold">Chat</h2>
                 {% if error_message %}<p><strong class="text-danger">{{ error_message }}</strong></p>{% endif %}
 
                 <div class="dropdown">
@@ -159,7 +161,7 @@
                             {% else %}
                                 <i class="bi bi-robot"></i>
                             {% endif %}
-                            <div class="message ms-3 w-100">
+                            <div class="message ms-3 w-100 bg-body-tertiary">
                                 {% if not message.is_user and message.content|slice:":7" == "<think>" %}
                                     {% with thoughts=message.content|extract_thoughts|markdownify %}
                                         <div class="accordion mb-2" id="thoughtAccordion{{ forloop.counter }}">
@@ -202,13 +204,13 @@
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" name="prompt" id="prompt" placeholder="Enter a prompt" aria-label="Enter a prompt" aria-describedby="send">
                             <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
-                            <button class="btn bg-green" type="submit" id="send"><i class="bi bi-send-fill"></i></button>
+                            <button class="btn btn-light magic-border" type="submit" id="send"><i class="bi bi-send-fill magic-text"></i></button>
                         </div>
                     </form>
                 </div>
             </div>
             <div class="col-3 ms-3 rounded shadow p-3" id="other">
-                <h2 >Podcast</h2>
+                <h2 class="fw-semibold">Podcast</h2>
                 <p class="opacity-75">This is gonna be a super cool podcast section soon!</p>
             </div>
         </div>

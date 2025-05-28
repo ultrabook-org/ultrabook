@@ -1,45 +1,6 @@
-:root {
-  --ub-green: #1dbe42;       /* Standard green (Bootstrap's default) */
-  --vivid-ub-green: #1e7e34; /* Saturated green for emphasis */
-  --ub-dark-green: #155724;  /* Darker green for hover/focus */
-  --ub-green-border: #196926; /* Border shade */
-}
-
 html,
 body {
   height: 100%;
-}
-
-.bg-green {
-  background-color: var(--ub-green);
-  border: var(--ub-green-border);
-  transition: 0.25s;
-}
-
-.bg-green:hover {
-  background-color: var(--vivid-ub-green);
-  border: var(--ub-green-border);
-  color: white;
-}
-
-.bg-green:focus {
-  background-color: var(--ub-dark-green);
-  color: white;
-  border: var(--ub-green-border);
-}
-
-.bg-green:hover:focus {
-  background-color: var(--ub-dark-green);
-  color: white;
-  border: var(--ub-green-border);
-}
-
-.green {
-  color: var(--ub-green);
-}
-
-.vivid-green {
-  color: var(--vivid-ub-green);
 }
 
 .large-icon {
@@ -52,12 +13,9 @@ body {
   right: 2.5vh;
 }
 
-#userButton {
-  transition: 0.25s;
-}
-
-#userButton:hover {
-  color: #0d6efd
+#new-project-btn {
+  margin: 0;
+  padding: 0 1.5rem 0 1rem;
 }
 
 .icon-lg {
@@ -86,18 +44,102 @@ body {
   align-items: center;
 }
 
-.card:hover * {
-  color: white;
+.card {
+  transition: 100ms;
+  max-height: 20vh;
 }
 
-.badge {
-  background-color: var(--ub-green);
-  color: black;
-  margin-top: 5px;
-  margin-right: 5px;
+.card:hover {
+  box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15);
 }
 
-.badge:hover {
+.magic-border:hover .magic-text {
+  background: radial-gradient(
+    #f72585,
+    #48cae4,
+    #ee9b00,
+    #e76f51,
+    #f72585
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.magic-border .magic-text {
+  background-image: none;
+  /* keep normal text color until hover */
+  color: currentColor;
+  /* set up the clip so when the bg-image appears it shows through text */
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* transition both the gradient and the color */
+  transition: background-image 0.3s, color 0.3s;
+}
+
+.magic-border {
+  --angle: 0deg;
+  position: relative;
+  display: inline-block;
+  border-radius: 0.5rem;
+  background-color: white;
   cursor: pointer;
-  color: white;
+  outline: none;
+  z-index: 1;
+  /* smooth fade-in of border on hover */
+  transition: background-color 0.3s;
+}
+
+.magic-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 3.5px;              /* border thickness */
+  border-radius: inherit;    /* match the button */
+  background: conic-gradient(
+    from var(--angle),
+    #f72585,
+    #48cae4,
+    #ee9b00,
+    #e76f51,
+    #f72585
+  );
+  mask:
+    /* punch through the center so only the ring shows */
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+
+  z-index: -1;
+  pointer-events: none;
+
+  /* hidden by default */
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.magic-border:hover {
+  background-color: white; /* in case you want a color change */
+}
+
+.magic-border:hover::before {
+  /* fade in the ring */
+  opacity: 1;
+  /* start rotating */
+  animation: rotate 2s linear infinite;
+}
+
+/* animate the conic gradient’s start angle */
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* register the custom property for animation */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }

@@ -1,10 +1,3 @@
-:root {
-  --ub-green: #1dbe42;       /* Standard green (Bootstrap's default) */
-  --vivid-ub-green: #1e7e34; /* Saturated green for emphasis */
-  --ub-dark-green: #155724;  /* Darker green for hover/focus */
-  --ub-green-border: #196926; /* Border shade */
-}
-
 html,
 body {
   height: 100%;
@@ -14,49 +7,109 @@ body {
   overflow-y: hidden;
 }
 
-.bg-green {
-  background-color: var(--ub-green);
-  border: var(--ub-green-border);
-  transition: 0.25s;
+.magic-border:hover .magic-text {
+  background: radial-gradient(
+    #f72585,
+    #48cae4,
+    #ee9b00,
+    #e76f51,
+    #f72585
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-.bg-green:hover {
-  background-color: var(--vivid-ub-green);
-  border: var(--ub-green-border);
+.magic-border .magic-text {
+  background-image: none;
+  /* keep normal text color until hover */
+  color: currentColor;
+  /* set up the clip so when the bg-image appears it shows through text */
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* transition both the gradient and the color */
+  transition: background-image 0.3s, color 0.3s;
 }
 
-.bg-green:focus {
-  background-color: var(--ub-dark-green);
-  color: white;
-  border: var(--ub-green-border);
+.magic-border {
+  --angle: 0deg;
+  position: relative;
+  display: inline-block;
+  border-radius: 0.5rem;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  z-index: 1;
+  /* smooth fade-in of border on hover */
+  transition: background-color 0.3s;
 }
 
-.bg-green:hover:focus {
-  background-color: var(--ub-dark-green);
-  color: white;
-  border: var(--ub-green-border);
+.magic-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 3.5px;              /* border thickness */
+  border-radius: inherit;    /* match the button */
+  background: conic-gradient(
+    from var(--angle),
+    #f72585,
+    #48cae4,
+    #ee9b00,
+    #e76f51,
+    #f72585
+  );
+  mask:
+    /* punch through the center so only the ring shows */
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+
+  z-index: -1;
+  pointer-events: none;
+
+  /* hidden by default */
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
-.green {
-  color: var(--ub-green);
+.magic-border:hover {
+  background-color: white; /* in case you want a color change */
 }
 
-.vivid-green {
-  color: var(--vivid-ub-green);
+.magic-border:hover::before {
+  /* fade in the ring */
+  opacity: 1;
+  /* start rotating */
+  animation: rotate 2s linear infinite;
 }
 
-#content {
-  height: 90%;
+/* animate the conic gradient’s start angle */
+@keyframes rotate {
+  to {
+    --angle: 360deg;
+  }
 }
 
-.container-fluid {
-    min-height: calc(100vh - 60px); /* Adjust for header height */
+/* register the custom property for animation */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
 
 /* Header styling */
 .row.border-bottom {
     color: white;
-    padding: 1rem;
+    padding: 0.5rem;
+}
+
+#header {
+  height: 5vh;
+}
+
+#content {
+  height: 95vh;
 }
 
 .user-info {
@@ -75,18 +128,6 @@ body {
 
 #deleteButton, #homeButton, #userButton {
   transition: 0.25s;
-}
-
-#deleteButton:hover {
-  color: #dc3545;
-}
-
-#homeButton:hover {
-  color: var(--ub-green);
-}
-
-#userButton:hover {
-  color: #0d6efd
 }
 
 .icon-lg {
@@ -159,21 +200,9 @@ body {
   width: 90%;
 }
 
-.badge {
-  background-color: var(--ub-green);
-  color: black;
-  margin-top: 5px;
-  margin-right: 5px;
-}
-
-.badge:hover {
-  cursor: pointer;
-  color: white;
-}
-
 pre {
   background: #161e25;
-  border-left: 3px solid var(--ub-green);
+  border-left: 3px solid #ffe69c;
   page-break-inside: avoid;
   font-family: monospace;
   line-height: 1.6;
@@ -183,4 +212,22 @@ pre {
   padding: 1em 1.5em;
   display: block;
   word-wrap: break-word;
+}
+
+.btn-outline-secondary {
+  border-color: #4a5568;
+  color: #cbd5e0;
+}
+.btn-outline-secondary:hover {
+  background: #4a5568;
+  color: #fff;
+}
+
+.message {
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.message .bi-robot, .message .bi-person-fill {
+  flex-shrink: 0;
 }
