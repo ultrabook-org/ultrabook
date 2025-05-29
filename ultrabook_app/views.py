@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse, JsonResponse
 from django.views.decorators.cache import never_cache
+from django.conf import settings
 from .models import Project, File, Message
 
 from langchain_chroma import Chroma
@@ -27,7 +28,7 @@ from langchain_community.document_loaders import SeleniumURLLoader
 embedder = OllamaEmbeddings(model="snowflake-arctic-embed2")
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0)
 
-OLLAMA_URL = "http://localhost:11434"  # Make sure this is set correctly
+OLLAMA_URL = settings.OLLAMA_BASE_URL  # Make sure this is set correctly
 
 def get_models() -> list:
     try:
@@ -121,7 +122,7 @@ def new_project(request):
             user=request.user,
             title=request.POST["title"],
             desc=request.POST["desc"],
-            ai_model="qwen3:8b"
+            ai_model=settings.DEFAULT_MODEL
         )
         project.save()
     except Exception as e:

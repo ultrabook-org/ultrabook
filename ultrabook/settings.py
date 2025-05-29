@@ -11,6 +11,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
+
+OLLAMA_BASE_URL = env("OLLAMA_URL", default="http://localhost:11434")
+DEFAULT_MODEL = env("DEFAULT_MODEL", default="tinyllama")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-pekf8ai63q7gs$i#_boctkot8$s9u8quu$$j0ign*d8y*g9msq'
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True

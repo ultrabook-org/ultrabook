@@ -57,40 +57,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2) Prepare bot container + one-time accordion
     globalThoughtId += 1;
     const id = globalThoughtId;
-    const botMsg = document.createElement('div');
-    botMsg.classList.add('d-flex','align-items-start','mb-3');
-    botMsg.innerHTML = `
-      <i class="bi bi-robot"></i>
-      <div class="message ms-3 w-100">
-        <div class="accordion mb-2" id="thoughtAccordion${id}">
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="heading${id}">
-              <button class="accordion-button collapsed p-1"
-                      type="button"
-                      id="accordionToggleBtn${id}"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#collapse${id}"
-                      aria-expanded="false"
-                      aria-controls="collapse${id}">
-                Thinking...
-              </button>
-            </h2>
-            <div id="collapse${id}"
-                 class="accordion-collapse collapse"
-                 aria-labelledby="heading${id}"
-                 data-bs-parent="#thoughtAccordion${id}">
-              <div class="accordion-body p-2" id="accordionBody${id}"></div>
-            </div>
-          </div>
-        </div>
-        <div id="answerContent${id}"></div>
-      </div>`;
-    conversation.appendChild(botMsg);
 
-    // Grab references so we don't re-write the wrapper each time
-    const thoughtEl = document.getElementById(`accordionBody${id}`);
-    const answerEl  = document.getElementById(`answerContent${id}`);
-    const accordionBtn = document.getElementById(`accordionToggleBtn${id}`);
+    let botMsg, thoughtEl, answerEl, accordionBtn;
+    let botMsgAppended = false;
+    let thinkFirst = false;
 
     // 3) Stream into buffers
     let seenStart     = false;
@@ -112,11 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let remaining = text;
 
-        // a) before <think> goes into answer
         if (!seenStart) {
           const idx = remaining.indexOf('<think>');
           if (idx !== -1) {
             seenStart = true;
+            thinkFirst = idx === 0;
             answerBuffer += remaining.slice(0, idx);
             remaining = remaining.slice(idx + '<think>'.length);
           } else {
@@ -125,29 +95,79 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // b) inside thoughts until </think>
+        if (!botMsgAppended) {
+          // Create botMsg dynamically based on whether <think> was first
+          botMsg = document.createElement('div');
+          botMsg.classList.add('d-flex','align-items-start','mb-3');
+
+          if (thinkFirst) {
+            botMsg.innerHTML = `
+              <i class="bi bi-robot"></i>
+              <div class="message ms-3 w-100">
+                <div class="accordion mb-2" id="thoughtAccordion${id}">
+                  <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading${id}">
+                      <button class="accordion-button collapsed p-1"
+                              type="button"
+                              id="accordionToggleBtn${id}"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#collapse${id}"
+                              aria-expanded="false"
+                              aria-controls="collapse${id}">
+                        Thinking...
+                      </button>
+                    </h2>
+                    <div id="collapse${id}"
+                        class="accordion-collapse collapse"
+                        aria-labelledby="heading${id}"
+                        data-bs-parent="#thoughtAccordion${id}">
+                      <div class="accordion-body p-2" id="accordionBody${id}"></div>
+                    </div>
+                  </div>
+                </div>
+                <div id="answerContent${id}"></div>
+              </div>`;
+          } else {
+            botMsg.innerHTML = `
+              <i class="bi bi-robot"></i>
+              <div class="message ms-3 w-100">
+                <div id="answerContent${id}"></div>
+              </div>`;
+          }
+
+          conversation.appendChild(botMsg);
+          botMsgAppended = true;
+
+          // set references
+          if (thinkFirst) {
+            thoughtEl = document.getElementById(`accordionBody${id}`);
+            accordionBtn = document.getElementById(`accordionToggleBtn${id}`);
+          }
+          answerEl = document.getElementById(`answerContent${id}`);
+        }
+
         if (seenStart && !seenEnd && remaining) {
           const closeIdx = remaining.indexOf('</think>');
           if (closeIdx !== -1) {
             thoughtBuffer += remaining.slice(0, closeIdx);
             seenEnd = true;
-            accordionBtn.textContent = 'Show thoughts';
+            if (accordionBtn) accordionBtn.textContent = 'Show thoughts';
             answerBuffer += remaining.slice(closeIdx + '</think>'.length);
           } else {
             thoughtBuffer += remaining;
           }
         }
 
-        // c) after </think>, any left in remaining is public
-        if (seenEnd && remaining && remaining.indexOf('</think>') === -1) {
+        if (seenEnd && remaining.indexOf('</think>') === -1) {
           answerBuffer += remaining;
         }
 
-        // 4) re-render only the inner bodies
-        thoughtEl.innerHTML = marked.parse(thoughtBuffer);
-        answerEl.innerHTML  = marked.parse(answerBuffer);
+        // Update UI
+        if (thinkFirst && thoughtEl) {
+          thoughtEl.innerHTML = marked.parse(thoughtBuffer);
+        }
+        answerEl.innerHTML = marked.parse(answerBuffer);
 
-        // scroll to bottom
         conversation.scrollTop = conversation.scrollHeight;
       });
     }
@@ -168,3 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(console.log(e));
     });
 });
+
+window.onload = () => {
+    const convo = document.getElementById("conversation");
+    convo.scrollTop = convo.scrollHeight;
+  };

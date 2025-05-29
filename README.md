@@ -52,7 +52,7 @@ Where are the tests?
 
 ## Roadmap
 
-- Environment variables to control default values
+- ~~Environment variables to control default values~~
 
 - ~~Tests~~
 

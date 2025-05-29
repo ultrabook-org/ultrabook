@@ -147,8 +147,3 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
-
-  window.onload = () => {
-    const convo = document.getElementById("conversation");
-    convo.scrollTop = convo.scrollHeight;
-  };
