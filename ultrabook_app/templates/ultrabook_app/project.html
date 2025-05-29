@@ -162,40 +162,38 @@
                                 <i class="bi bi-robot"></i>
                             {% endif %}
                             <div class="message ms-3 w-100 bg-body-tertiary">
-                                {% if not message.is_user and message.content|slice:":7" == "<think>" %}
-                                    {% with thoughts=message.content|extract_thoughts|markdownify %}
+                                {% with thoughts=message.content|extract_thoughts|markdownify %}
+                                    {% if thoughts %}
                                         <div class="accordion mb-2" id="thoughtAccordion{{ forloop.counter }}">
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                                            <button
-                                                class="accordion-button collapsed p-1"
-                                                type="button"
-                                                data-bs-toggle="collapse"
-                                                data-bs-target="#collapse{{ forloop.counter }}"
-                                                aria-expanded="false"
-                                                aria-controls="collapse{{ forloop.counter }}"
-                                            >
-                                                Thoughts
-                                            </button>
-                                            </h2>
-                                            <div
-                                            id="collapse{{ forloop.counter }}"
-                                            class="accordion-collapse collapse"
-                                            aria-labelledby="heading{{ forloop.counter }}"
-                                            data-bs-parent="#thoughtAccordion{{ forloop.counter }}"
-                                            >
-                                            <div class="accordion-body p-2">
-                                                {{ thoughts|safe }}
-                                            </div>
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                                    <button
+                                                        class="accordion-button collapsed p-1"
+                                                        type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#collapse{{ forloop.counter }}"
+                                                        aria-expanded="false"
+                                                        aria-controls="collapse{{ forloop.counter }}"
+                                                    >
+                                                        Thoughts
+                                                    </button>
+                                                </h2>
+                                                <div
+                                                    id="collapse{{ forloop.counter }}"
+                                                    class="accordion-collapse collapse"
+                                                    aria-labelledby="heading{{ forloop.counter }}"
+                                                    data-bs-parent="#thoughtAccordion{{ forloop.counter }}"
+                                                >
+                                                    <div class="accordion-body p-2">
+                                                        {{ thoughts|safe }}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        </div>
-                                    {% endwith %}
+                                    {% endif %}
                                     {{ message.content|strip_thoughts|markdownify }}
-                                {% else %}
-                                    {{ message.content|markdownify }}
-                                {% endif %}
-                            </div>
+                                {% endwith %}
+                                </div>
                             </div>
                         {% endfor %}
                     </div>

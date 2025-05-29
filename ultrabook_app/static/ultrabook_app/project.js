@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     userMsg.classList.add('d-flex','align-items-start','mb-3');
     userMsg.innerHTML = `
       <i class="bi bi-person-fill"></i>
-      <div class="message ms-3">${userText}</div>`;
+      <div class="message ms-3 bg-body-tertiary">${userText}</div>`;
     conversation.appendChild(userMsg);
 
     // 2) Prepare bot container + one-time accordion
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (thinkFirst) {
             botMsg.innerHTML = `
               <i class="bi bi-robot"></i>
-              <div class="message ms-3 w-100">
+              <div class="message ms-3 w-100 bg-body-tertiary">
                 <div class="accordion mb-2" id="thoughtAccordion${id}">
                   <div class="accordion-item">
                     <h2 class="accordion-header" id="heading${id}">
