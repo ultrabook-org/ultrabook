@@ -35,27 +35,23 @@
         </div>
         <div id="header">
             <h1 class="title fw-semibold" id="heading">Welcome to ultrabook {% if user.is_authenticated %} {{ user.username }}! {% endif %}</h1>
-            {% if projects|length > 0 %}
+            <div id="subheading">
                 <p class="lead">Create a new project or select one below</p>
                 <button id="new-project-btn" class="btn btn-light magic-border btn-lg d-flex justify-content-center align-items-center magic-text" data-bs-toggle="modal" data-bs-target="#createProjectForm"><i class="bi bi-plus large-icon"></i> New Project</button>
-                <div id="projects" class="d-flex flex-wrap">
-                    {% for project in projects %}
-                        <div class="card me-2 mt-5 bg-light text-dark magic-border" style="width: 18rem;">
-                            <a href="{% url 'home:open-project' project_key=project.pk %}" id="anchorCard">
-                                <div class="card-body">
-                                    <i class="bi bi-{{ project.icon }} mb-5 large-icon magic-text"></i>
-                                    <h3 class="card-title text-truncate">{{ project.title }}</h3>
-                                    <p class="card-text mb-2 text-truncate">{{ project.desc }}</p>
-                                </div>
-                            </a>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <p class="lead">Create a new project to begin</p>
-                <button id="new-project-btn" class="btn btn-light magic-border btn-lg" data-bs-toggle="modal" data-bs-target="#createProjectForm"><i class="bi bi-plus"></i> New Project</button>
-                <div id="projects"></div>
-            {% endif %}
+            </div>
+            <div id="projects" class="d-flex flex-wrap">
+                {% for project in projects %}
+                    <div class="card me-2 mt-5 bg-light text-dark magic-border" style="width: 18rem;">
+                        <a href="{% url 'home:open-project' project_key=project.pk %}" id="anchorCard">
+                            <div class="card-body">
+                                <i class="bi bi-{{ project.icon }} mb-5 large-icon magic-text"></i>
+                                <h3 class="card-title text-truncate">{{ project.title }}</h3>
+                                <p class="card-text mb-2 text-truncate">{{ project.desc }}</p>
+                            </div>
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
             <div id="createProjectForm" class="modal fade" tabindex="-1" aria-labelledby="createProjectForm">
                 <div class="modal-dialog modal-dialog-centered modal-lg">
                     <div class="modal-content rounded-4 shadow">
@@ -104,6 +100,43 @@
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", (event) => {
+            gsap.registerPlugin(SplitText);
+
+            document.fonts.ready.then(() => {
+                gsap.set("#heading", { opacity: 1 });
+                gsap.set("#subheading", { opacity: 1 })
+                const split = SplitText.create("#heading", {
+                    type: "words",
+                    onSplit: (self) => {
+                        return gsap.from(self.words, {
+                            y: 30,
+                            opacity: 0,
+                            stagger: 0.15,
+                            ease: "back"
+                        });
+                    }
+                })
+
+                const subheading = document.getElementById("subheading")
+                gsap.from(subheading, {
+                    y: 30,
+                    opacity: 0,
+                    ease: "back"
+                })
+            })
+
+            const cards = document.getElementsByClassName("card")
+            gsap.from(cards, {
+                y: 30,
+                autoAlpha: 0,
+                stagger: 0.125
+            });
+        });
+    </script>
     {% load static %}
     <script src="{% static 'ultrabook_app/app.js' %}"></script>
 </body>

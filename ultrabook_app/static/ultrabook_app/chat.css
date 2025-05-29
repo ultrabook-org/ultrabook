@@ -7,6 +7,10 @@ body {
   overflow-y: hidden;
 }
 
+.fade-in {
+  opacity: 0;
+}
+
 .magic-border:hover .magic-text {
   background: radial-gradient(
     #f72585,

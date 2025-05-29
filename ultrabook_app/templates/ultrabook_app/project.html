@@ -155,44 +155,46 @@
                 <div class="chat-features full-height">
                     <div id="conversation" class="mt-3 mb-3 w-100">
                         {% for message in conversation %}
-                            <div class="d-flex align-items-start mb-3">
-                            {% if message.is_user %}
-                                <i class="bi bi-person-fill"></i>
-                            {% else %}
-                                <i class="bi bi-robot"></i>
-                            {% endif %}
-                            <div class="message ms-3 w-100 bg-body-tertiary">
-                                {% with thoughts=message.content|extract_thoughts|markdownify %}
-                                    {% if thoughts %}
-                                        <div class="accordion mb-2" id="thoughtAccordion{{ forloop.counter }}">
-                                            <div class="accordion-item">
-                                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
-                                                    <button
-                                                        class="accordion-button collapsed p-1"
-                                                        type="button"
-                                                        data-bs-toggle="collapse"
-                                                        data-bs-target="#collapse{{ forloop.counter }}"
-                                                        aria-expanded="false"
-                                                        aria-controls="collapse{{ forloop.counter }}"
+                            <div class="fade-message">
+                                <div class="d-flex align-items-start mb-3">
+                                {% if message.is_user %}
+                                    <i class="bi bi-person-fill"></i>
+                                {% else %}
+                                    <i class="bi bi-robot"></i>
+                                {% endif %}
+                                <div class="message ms-3 w-100 bg-body-tertiary">
+                                    {% with thoughts=message.content|extract_thoughts|markdownify %}
+                                        {% if thoughts %}
+                                            <div class="accordion mb-2" id="thoughtAccordion{{ forloop.counter }}">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                                        <button
+                                                            class="accordion-button collapsed p-1"
+                                                            type="button"
+                                                            data-bs-toggle="collapse"
+                                                            data-bs-target="#collapse{{ forloop.counter }}"
+                                                            aria-expanded="false"
+                                                            aria-controls="collapse{{ forloop.counter }}"
+                                                        >
+                                                            Thoughts
+                                                        </button>
+                                                    </h2>
+                                                    <div
+                                                        id="collapse{{ forloop.counter }}"
+                                                        class="accordion-collapse collapse"
+                                                        aria-labelledby="heading{{ forloop.counter }}"
+                                                        data-bs-parent="#thoughtAccordion{{ forloop.counter }}"
                                                     >
-                                                        Thoughts
-                                                    </button>
-                                                </h2>
-                                                <div
-                                                    id="collapse{{ forloop.counter }}"
-                                                    class="accordion-collapse collapse"
-                                                    aria-labelledby="heading{{ forloop.counter }}"
-                                                    data-bs-parent="#thoughtAccordion{{ forloop.counter }}"
-                                                >
-                                                    <div class="accordion-body p-2">
-                                                        {{ thoughts|safe }}
+                                                        <div class="accordion-body p-2">
+                                                            {{ thoughts|safe }}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    {% endif %}
-                                    {{ message.content|strip_thoughts|markdownify }}
-                                {% endwith %}
+                                        {% endif %}
+                                        {{ message.content|strip_thoughts|markdownify }}
+                                    {% endwith %}
+                                    </div>
                                 </div>
                             </div>
                         {% endfor %}
@@ -202,7 +204,7 @@
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" name="prompt" id="prompt" placeholder="Enter a prompt" aria-label="Enter a prompt" aria-describedby="send">
                             <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
-                            <button class="btn btn-light" type="submit" id="send"><i class="bi bi-send-fill magic-text"></i></button>
+                            <button class="btn btn-light magic-border" type="submit" id="send"><i class="bi bi-send-fill magic-text"></i></button>
                         </div>
                     </form>
                 </div>
@@ -215,6 +217,80 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", (event) => {
+            gsap.registerPlugin(SplitText);
+
+            document.fonts.ready.then(() => {
+                const titles = document.getElementsByClassName("fw-semibold");
+                const chips = document.getElementsByClassName("rounded-pill");
+                const messages = document.getElementsByClassName("fade-message");
+                const chatForm = document.getElementById('chat-form');
+
+                // Initially hide messages
+                for (let i = 0; i < messages.length; i++) {
+                    messages[i].style.display = 'none';
+                }
+
+                // Create a timeline to animate all elements simultaneously
+                const tl = gsap.timeline();
+
+                // Animate all "fw-semibold" elements (Sources, Chat, Podcast) with text splitting
+                tl.from(titles, {
+                    y: 30,
+                    opacity: 0,
+                    stagger: 0, // Animate all at once
+                    ease: "back",
+                    onStart: () => {
+                        // Split the text for each title
+                        for (let i = 0; i < titles.length; i++) {
+                            SplitText.create(titles[i], {
+                                type: "chars",
+                                onSplit: (self) => {
+                                    return gsap.from(self.chars, {
+                                        y: 30,
+                                        opacity: 0,
+                                        stagger: 0.05,
+                                        ease: "back"
+                                    });
+                                }
+                            });
+                        }
+                    }
+                });
+
+                // Animate chips at the same time
+                tl.from(chips, {
+                    y: 30,
+                    autoAlpha: 0,
+                    stagger: 0.15,
+                    ease: "back"
+                });
+
+                // Animate chat form and messages simultaneously
+                tl.then(() => {
+                    chatForm.style.display = 'block';
+                    for (let i = 0; i < messages.length; i++) {
+                        messages[i].style.display = 'block';
+                        gsap.from(messages[i], {
+                            y: 30,
+                            opacity: 0,
+                            stagger: 0.25,
+                            ease: "back"
+                        });
+                    }
+                    gsap.from(chatForm, {
+                        y: 30,
+                        opacity: 0,
+                        stagger: 0.25,
+                        ease: "back"
+                    });
+                });
+            });
+        });
+    </script>
     
     {% load static %}
     <script src="{% static 'ultrabook_app/app.js' %}"></script>
