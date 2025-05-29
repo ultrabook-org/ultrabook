@@ -197,12 +197,12 @@
                             </div>
                         {% endfor %}
                     </div>
-                    <form action="{% url 'home:gen' %}" method="post" class="w-100 chat-form">
+                    <form action="{% url 'home:gen' %}" method="post" class="w-100 chat-form" id="chat-form">
                         {% csrf_token %}
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" name="prompt" id="prompt" placeholder="Enter a prompt" aria-label="Enter a prompt" aria-describedby="send">
                             <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
-                            <button class="btn btn-light magic-border" type="submit" id="send"><i class="bi bi-send-fill magic-text"></i></button>
+                            <button class="btn btn-light" type="submit" id="send"><i class="bi bi-send-fill magic-text"></i></button>
                         </div>
                     </form>
                 </div>
