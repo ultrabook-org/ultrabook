@@ -5,7 +5,6 @@
 
 ### Table of contents
 - [Installation](#installation)
-- [FAQ](#faq)
 - [Roadmap](#roadmap)
 
 #### About
@@ -37,18 +36,6 @@ Ultrabook uses [Ollama](https://ollama.com/), [LangChain](https://www.langchain.
 ```
 
 5. Done! 🎉
-## FAQ
-
-#### Question 1
-
-How do I change the default model?
-> Support for environment variables is coming soon!
-
-#### Question 2
-
-Where are the tests?
-> Software test are on the way! I am new to Django so please be patient
-
 
 ## Roadmap
 
@@ -60,7 +47,7 @@ Where are the tests?
 
 - ~~Website loading & embedding~~
 
-- Podcast feature
+- ~~Podcast feature~~ ⚠️ Needs work. DO NOT USE A REASONING MODEL
 
 - Scripts to automate starting server
 

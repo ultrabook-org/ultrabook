@@ -22,6 +22,14 @@ class File(models.Model):
     def __str__(self):
         return f"File {self.file.name} for {self.project.title}"
 
+class Podcast(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    file = models.FileField(upload_to="podcasts/")
+    created_at = models.DateTimeField(db_default=Now())
+
+    def __str__(self):
+        return f"File {self.file.name} for {self.project.title}"
+
 class Message(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     content = models.TextField()

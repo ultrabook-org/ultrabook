@@ -67,7 +67,9 @@
             <div class="col-3 rounded shadow p-3" id="sources">
                 <h2 class="fw-semibold">Sources</h2>
                 <p class="opacity-75">Upload new sources or click to remove them</p>
-                <button id="upload-sources-btn" class="btn btn-lg btn-light magic-border mb-3" data-bs-toggle="modal" data-bs-target="#uploadSourcesForm"><i class="bi bi-upload"></i> Upload Sources</button>
+                <div class="d-flex justify-content-center align-items-center" id="upload-sources">
+                    <button id="upload-sources-btn" class="btn btn-lg btn-light magic-border mb-3 w-100" data-bs-toggle="modal" data-bs-target="#uploadSourcesForm"><i class="bi bi-upload magic-text"></i> Upload Sources</button>
+                </div>
                 <div id="uploadSourcesForm" class="modal fade" tabindex="-1" aria-labelledby="uploadSourcesForm">
                     <div class="modal-dialog modal-dialog-centered modal-lg">
                         <div class="modal-content rounded-4 shadow">
@@ -211,7 +213,30 @@
             </div>
             <div class="col-3 ms-3 rounded shadow p-3" id="other">
                 <h2 class="fw-semibold">Podcast</h2>
-                <p class="opacity-75">This is gonna be a super cool podcast section soon!</p>
+                <p class="opacity-75">Generate a podcast with your sources below ⚠️ Under development</p>
+                <form action="{% url 'home:create-podcast' %}" method="post" class="d-flex justify-content-center align-items-center" id="podcast-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="projectID" id="projectID" value="{{ project.pk }}">
+                    <button
+                    id="create-podcast-btn"
+                    class="btn btn-lg btn-light magic-border w-100"
+                    type="submit"
+                    >
+                    <i class="bi bi-mic-fill magic-text"></i> Create Podcast
+                    </button>
+                </form>
+                {% if podcast_file %}
+                <div class="container d-flex justify-content-center my-4 mb-5">
+                    <div class="card">
+                        <div class="card-body text-center">
+                            <h5>{{ project.title }} Podcast</h5>
+                            <audio controls preload="auto">
+                                <source src="{{ podcast_file }}" type="audio/mpeg">
+                            </audio>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -271,9 +296,16 @@
 
                 // Animate chat form and messages simultaneously
                 tl.then(() => {
-                    chatForm.style.display = 'block';
+                    chatForm.style.display = 'block'; // Show the form
+                    // Animate the form and messages
+                    gsap.from(chatForm, {
+                        y: 30,
+                        autoAlpha: 0,
+                        stagger: 0.25,
+                        ease: "back"
+                    });
                     for (let i = 0; i < messages.length; i++) {
-                        messages[i].style.display = 'block';
+                        messages[i].style.display = 'block'; // Show messages
                         gsap.from(messages[i], {
                             y: 30,
                             opacity: 0,
@@ -281,12 +313,6 @@
                             ease: "back"
                         });
                     }
-                    gsap.from(chatForm, {
-                        y: 30,
-                        opacity: 0,
-                        stagger: 0.25,
-                        ease: "back"
-                    });
                 });
             });
         });

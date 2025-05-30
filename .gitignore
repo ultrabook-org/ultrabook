@@ -215,3 +215,5 @@ chroma_langchain_db/
 chroma/
 project_files/
 *.sqlite3
+podcasts/
+podcast.mp3

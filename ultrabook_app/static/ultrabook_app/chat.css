@@ -235,3 +235,11 @@ pre {
 .message .bi-robot, .message .bi-person-fill {
   flex-shrink: 0;
 }
+
+#chat-form {
+  display: none;
+}
+
+#podcast-form, #upload-sources {
+  width: 93%;
+}

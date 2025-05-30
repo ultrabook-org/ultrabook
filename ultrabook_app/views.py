@@ -3,16 +3,20 @@ import pathlib
 import subprocess
 import json
 import threading
+import tempfile
+import os
+import string
 from urllib.parse import unquote
 
 from django.http import HttpResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import StreamingHttpResponse, JsonResponse
 from django.views.decorators.cache import never_cache
 from django.conf import settings
-from .models import Project, File, Message
+from django.core.files.base import ContentFile
+from .models import Project, File, Message, Podcast
 
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings, ChatOllama
@@ -24,6 +28,9 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_community.document_loaders import SeleniumURLLoader
+
+from dia.model import Dia
+import torch
 
 embedder = OllamaEmbeddings(model="snowflake-arctic-embed2")
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0)
@@ -200,13 +207,18 @@ def open_project(request, project_key, **kwargs):
                 "file_pk": source.pk,
                 "is_url": is_url
             })
+        
+        podcast = None
+        if Podcast.objects.filter(project=selected_project).exists():
+            podcast = Podcast.objects.get(project=selected_project)
 
         return render(request, "ultrabook_app/project.html", {
             "project": selected_project,
             "sources": source_list,
             "models": models,
             "conversation": conversation,
-            "error_message": kwargs.get("error_message", None)
+            "error_message": kwargs.get("error_message", None),
+            "podcast_file": podcast.file.url if podcast else None,
         })
     except Project.DoesNotExist:
         return HttpResponse("Project not found", status=404)
@@ -235,14 +247,6 @@ def generate_stream(request):
     retriever = vector_store.as_retriever()
     chain = create_retrieval_chain(retriever, combine_chain)
 
-    # Save user message immediately
-    usr_msg = Message.objects.create(
-        project=selected_project,
-        content=user_prompt,
-        is_user=True,
-    )
-    
-    usr_msg.save()
 
     messages = Message.objects.filter(project=selected_project).values('content', 'is_user')
     chat_history = chat_history = [
@@ -252,6 +256,15 @@ def generate_stream(request):
         }
         for msg in messages
     ]
+    
+    # Save user message immediately
+    usr_msg = Message.objects.create(
+        project=selected_project,
+        content=user_prompt,
+        is_user=True,
+    )
+    
+    usr_msg.save()
 
     def stream_generator():
         for chunk in chain.stream({
@@ -325,8 +338,7 @@ def fetch_model(request):
     project_key = request.POST["projectID"]
     selected_project = Project.objects.get(pk=project_key)
 
-    model_name = request.POST["model"]
-    model_name = unquote(model_name)
+    model_name = unquote(request.POST["model"])
     
     try:
         subprocess.run(["ollama", "pull", model_name], check=True)
@@ -374,4 +386,72 @@ def save_message(request):
     
     else:
         return redirect('home/')
+    
+def text_to_audio(request):
+    project = get_object_or_404(Project, pk=request.POST["projectID"])
 
+    vector_store = Chroma(
+        collection_name=project.title.replace(' ', '-'),
+        embedding_function=embedder,
+        persist_directory='./chroma_langchain_db',
+    )
+    prompt_template = ChatPromptTemplate.from_messages([
+        MessagesPlaceholder(variable_name="chat_history"),
+        ('system', """
+You are a professional podcast scriptwriter. Your task is to generate the first 10 lines of a short, engaging, and DiaTTS-compatible podcast script based on the provided context and using the chat history for inspiration. The script *must* adhere to the following strict formatting rules:
+
+*   **Speaker Identification:**  Use [S1] and [S2] to clearly denote which speaker is talking. The script *must* alternate between [S1] and [S2] - there are no other speakers. The script *must* begin with [S1].
+*   **No Preamble:**  Begin the script directly with the first line of dialogue. No introductory text or greetings are allowed.
+*   **No Line Breaks:**  Do *not* include any line break characters (\n).  Each line should flow into the next.
+*   **Proper Punctuation:**  All lines *must* end with proper punctuation (period, question mark, exclamation point - but use exclamation points sparingly).
+*   **Sound Effects:** Incorporate appropriate sound effects from the list: (laughs), (clears throat), (sighs), (gasps), (coughs), (singing), (sings), (mumbles), (beep), (groans), (sniffs), (claps), (screams), (inhales), (exhales), (applause), (burps), (humming), (sneezes), (chuckle), (whistles). Use them sparingly to enhance the listening experience.
+*   **Length and Detail:**  Generate a script that is as short as possible (idealy 5-10 seconds), providing ample context and nuance for the dialogue.
+*   **Context Adherence:**  The script must be deeply rooted in the provided context. Refer back to the context frequently and make the dialogue organic and relevant. Here is the context: {context}
+"""),
+        ('human', '{input}'),
+    ])
+    try:
+        llm = ChatOllama(model=settings.PODCAST_MODEL)
+    except:
+        try:
+            process = subprocess.run(["ollama", "pull", settings.PODCAST_MODEL], check=True)
+            process.wait()
+            llm = ChatOllama(model=settings.PODCAST_MODEL)
+        except:
+            print("Unable to generate podcast with selected model")
+            return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))
+
+    combine_chain = create_stuff_documents_chain(llm=llm, prompt=prompt_template)
+    retriever = vector_store.as_retriever()
+    chain = create_retrieval_chain(retriever, combine_chain)
+
+    messages = Message.objects.filter(project=project).values('content', 'is_user')
+    chat_history = [
+        {
+            'content': msg['content'],
+            'role': 'human' if msg['is_user'] else 'ai'
+        }
+        for msg in messages
+    ]
+
+    text = chain.invoke({
+        "input": "Create a podcast using all the documents available to you.",
+        'chat_history': chat_history
+    })
+
+    torch.manual_seed(200907)
+    model = Dia.from_pretrained("nari-labs/Dia-1.6B", compute_dtype="bfloat16")
+    output = model.generate(text['answer'], use_torch_compile=False, verbose=True)
+
+    sanitized_name = project.title.translate(str.maketrans('', '', string.punctuation))
+    model.save_audio("podcast.mp3", output)
+
+    with open("podcast.mp3", 'rb') as f:
+        podcast_instance = Podcast(project=project)
+        podcast_instance.file.save(f"audio_{sanitized_name}.mp3", f)
+        podcast_instance.save()
+        
+    pathlib.Path.unlink("podcast.mp3")
+
+    # 5) Return a simple player
+    return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))

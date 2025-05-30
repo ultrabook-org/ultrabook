@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 
 from . import views
 
@@ -12,5 +14,9 @@ urlpatterns = [
     path("delete-project/<int:project_key>/", views.delete_project, name="delete-project"),
     path("switch-model/<int:project_key>/<str:model_name>/", views.switch_model, name="switch-model"),
     path("get-model/", views.fetch_model, name="get-model"),
-    path("save-system-message/", views.save_message, name='save-system-message')
+    path("save-system-message/", views.save_message, name='save-system-message'),
+    path("create-podcast/", views.text_to_audio, name="create-podcast")
 ]
+
+if settings.DEBUG:
+  urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
