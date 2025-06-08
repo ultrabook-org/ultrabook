@@ -31,6 +31,7 @@ from langchain_community.document_loaders import SeleniumURLLoader
 
 from dia.model import Dia
 import torch
+from RealtimeTTS import TextToAudioStream, KokoroEngine
 
 embedder = OllamaEmbeddings(model="snowflake-arctic-embed2")
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=0)
@@ -218,7 +219,7 @@ def open_project(request, project_key, **kwargs):
             "models": models,
             "conversation": conversation,
             "error_message": kwargs.get("error_message", None),
-            "podcast_file": podcast.file.url if podcast else None,
+            "podcast_file": podcast.file.url if podcast else None
         })
     except Project.DoesNotExist:
         return HttpResponse("Project not found", status=404)
@@ -386,7 +387,7 @@ def save_message(request):
     
     else:
         return redirect('home/')
-    
+
 def text_to_audio(request):
     project = get_object_or_404(Project, pk=request.POST["projectID"])
 
@@ -398,15 +399,9 @@ def text_to_audio(request):
     prompt_template = ChatPromptTemplate.from_messages([
         MessagesPlaceholder(variable_name="chat_history"),
         ('system', """
-You are a professional podcast scriptwriter. Your task is to generate the first 10 lines of a short, engaging, and DiaTTS-compatible podcast script based on the provided context and using the chat history for inspiration. The script *must* adhere to the following strict formatting rules:
-
-*   **Speaker Identification:**  Use [S1] and [S2] to clearly denote which speaker is talking. The script *must* alternate between [S1] and [S2] - there are no other speakers. The script *must* begin with [S1].
-*   **No Preamble:**  Begin the script directly with the first line of dialogue. No introductory text or greetings are allowed.
-*   **No Line Breaks:**  Do *not* include any line break characters (\n).  Each line should flow into the next.
-*   **Proper Punctuation:**  All lines *must* end with proper punctuation (period, question mark, exclamation point - but use exclamation points sparingly).
-*   **Sound Effects:** Incorporate appropriate sound effects from the list: (laughs), (clears throat), (sighs), (gasps), (coughs), (singing), (sings), (mumbles), (beep), (groans), (sniffs), (claps), (screams), (inhales), (exhales), (applause), (burps), (humming), (sneezes), (chuckle), (whistles). Use them sparingly to enhance the listening experience.
-*   **Length and Detail:**  Generate a script that is as short as possible (idealy 5-10 seconds), providing ample context and nuance for the dialogue.
-*   **Context Adherence:**  The script must be deeply rooted in the provided context. Refer back to the context frequently and make the dialogue organic and relevant. Here is the context: {context}
+You are a professional podcast host. You are on a live show with the provided context and conversation from before. You play the role of 'Ava' (a helpful research, learning and planning assistant) and
+         must give a speech on the chat history as well as the context. Get straight into the dialogue and do not use any special characters or 
+         markdown syntax. Feel free to introduce yourself or welcome viewers to the show but do not make any reference to hosts, guests or music/background sounds. Be as detailed and accurate as possible, discussing the context to generate a long script. Here is the context:\n{context}
 """),
         ('human', '{input}'),
     ])
@@ -434,24 +429,27 @@ You are a professional podcast scriptwriter. Your task is to generate the first 
         for msg in messages
     ]
 
-    text = chain.invoke({
-        "input": "Create a podcast using all the documents available to you.",
-        'chat_history': chat_history
-    })
+    engine = KokoroEngine()
+    stream = TextToAudioStream(
+        engine=engine,
+    )
+    
+    for chunk in chain.stream({
+                "input": "Create a podcast using all the documents available to you.",
+                'chat_history': chat_history
+            }):
+                text = chunk.get('answer', '')
+                if text:
+                    stream.feed(text)
 
-    torch.manual_seed(200907)
-    model = Dia.from_pretrained("nari-labs/Dia-1.6B", compute_dtype="bfloat16")
-    output = model.generate(text['answer'], use_torch_compile=False, verbose=True)
+    tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+    stream.play(output_wavfile=tmp.name)
+    tmp.flush()
 
     sanitized_name = project.title.translate(str.maketrans('', '', string.punctuation))
-    model.save_audio("podcast.mp3", output)
-
-    with open("podcast.mp3", 'rb') as f:
+    with open(tmp.name, 'rb') as f:
         podcast_instance = Podcast(project=project)
         podcast_instance.file.save(f"audio_{sanitized_name}.mp3", f)
         podcast_instance.save()
-        
-    pathlib.Path.unlink("podcast.mp3")
-
-    # 5) Return a simple player
+    
     return redirect(reverse('home:open-project', kwargs={"project_key": project.pk}))

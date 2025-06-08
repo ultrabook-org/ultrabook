@@ -48,6 +48,9 @@ Ultrabook uses [Ollama](https://ollama.com/), [LangChain](https://www.langchain.
 - ~~Website loading & embedding~~
 
 - ~~Podcast feature~~ ⚠️ Needs work. DO NOT USE A REASONING MODEL
+    - Improve podcast UI (waveform/blob to indicate speaking, controls)
+    - Loading spinner when podcast is being generated
+    - 'Jump-in' feature (see (RealtimeSTT)[https://github.com/KoljaB/RealtimeSTT])
 
 - Scripts to automate starting server
 

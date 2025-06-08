@@ -15,7 +15,7 @@ urlpatterns = [
     path("switch-model/<int:project_key>/<str:model_name>/", views.switch_model, name="switch-model"),
     path("get-model/", views.fetch_model, name="get-model"),
     path("save-system-message/", views.save_message, name='save-system-message'),
-    path("create-podcast/", views.text_to_audio, name="create-podcast")
+    path("create-podcast/", views.text_to_audio, name="create-podcast"),
 ]
 
 if settings.DEBUG:
