@@ -12,7 +12,7 @@ Ultrabook uses [Ollama](https://ollama.com/), [LangChain](https://www.langchain.
 ## Installation
 
 > [!IMPORTANT]
-> Requires [Ollama](https://ollama.com/) and [Python](https://www.python.org/downloads/) to be installed
+> Requires [Ollama](https://ollama.com/) and [Python](https://www.python.org/downloads/) to be installed. Do not use a reasoning model when setting the `PODCAST_MODEL` environment  variable.
 
 1. Clone the repo:
 ```bash
@@ -25,17 +25,25 @@ Ultrabook uses [Ollama](https://ollama.com/), [LangChain](https://www.langchain.
   pip install -r requirements.txt
 ```
 
-3. Make the Django database migrations:
+3. Set environment variables (see .env.example for the necessary values.) Get a secret key using the commands below:
+```bash
+  python3 manage.py shell
+
+  from django.core.management.utils import get_random_secret_key
+  print(get_random_secret_key())
+```
+
+4. Make the Django database migrations:
 ```bash
   py manage.py migrate
 ```
 
-4. Serve the Django server:
+5. Serve the Django server:
 ```bash
   py manage.py runserver
 ```
 
-5. Done! 🎉
+6. Done! 🎉
 
 ## Roadmap
 
