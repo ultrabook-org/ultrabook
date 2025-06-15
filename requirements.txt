@@ -238,10 +238,9 @@ threadpoolctl==3.6.0
 tifffile==2025.5.10
 tokenizers==0.21.1
 tomlkit==0.13.2
-torch==2.6.0+cu126
-torch-stoi==0.2.3
-torchaudio==2.6.0
-torchvision==0.21.0+cu126
+torch
+torchvision
+# If you want to force a specific CUDA version, see: https://pytorch.org/get-started/locally/
 tqdm==4.67.1
 traitlets==5.14.3
 transformers==4.51.3
